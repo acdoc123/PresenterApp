@@ -26,15 +26,10 @@ namespace PresenterApp
 #endif
             // Đăng ký Services
             builder.Services.AddSingleton<DataAccessService>();
-            builder.Services.AddSingleton<PresentationGenerationService>();
-            builder.Services.AddSingleton<PptxExportService>();
 
             // Đăng ký Views và ViewModels
-            builder.Services.AddSingleton<HomePage>();
-            builder.Services.AddSingleton<HomeViewModel>();
-
-            builder.Services.AddTransient<SongDetailPage>();
-            builder.Services.AddTransient<SongDetailViewModel>();
+            builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddSingleton<MainViewModel>();
 
 
             return builder.Build();

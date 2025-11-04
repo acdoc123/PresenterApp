@@ -1,24 +1,16 @@
-﻿namespace PresenterApp
+﻿// File: MainPage.xaml.cs
+using PresenterApp.ViewModels;
+
+namespace PresenterApp
 {
     public partial class MainPage : ContentPage
     {
-        int count = 0;
-
-        public MainPage()
+        public MainPage(MainViewModel viewModel) // Inject MainViewModel
         {
             InitializeComponent();
+            BindingContext = viewModel;
         }
 
-        private void OnCounterClicked(object? sender, EventArgs e)
-        {
-            count++;
-
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
-
-            SemanticScreenReader.Announce(CounterBtn.Text);
-        }
+        // Xóa code OnCounterClicked cũ
     }
 }
