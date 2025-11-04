@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.ManagementDashboardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:model="clr-namespace:PresenterApp.Models"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="Bảng điều khiển"
+    x:DataType="vm:ManagementDashboardViewModel">
+
+    <ScrollView Padding="10">
+        <VerticalStackLayout Spacing="15">
+
+            <Frame
+                Padding="10"
+                BorderColor="LightGray"
+                CornerRadius="5">
+                <VerticalStackLayout Spacing="5">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="Title"
+                            Text="Loại sách"
+                            VerticalOptions="Center" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding AddNewCommand}"
+                            CommandParameter="BookType"
+                            CornerRadius="25"
+                            FontSize="Large"
+                            HeightRequest="45"
+                            Text="+"
+                            WidthRequest="45" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding BookTypes}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="model:BookType">
+                                <Label Padding="10,5" FontSize="Medium">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Name}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ManagementDashboardViewModel}}, Path=EditItemCommand}" CommandParameter="{Binding}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame
+                Padding="10"
+                BorderColor="LightGray"
+                CornerRadius="5">
+                <VerticalStackLayout Spacing="5">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="Title"
+                            Text="Sách"
+                            VerticalOptions="Center" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding AddNewCommand}"
+                            CommandParameter="Book"
+                            CornerRadius="25"
+                            FontSize="Large"
+                            HeightRequest="45"
+                            Text="+"
+                            WidthRequest="45" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding Books}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="model:Book">
+                                <Label Padding="10,5" FontSize="Medium">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Name}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ManagementDashboardViewModel}}, Path=EditItemCommand}" CommandParameter="{Binding}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+            <Frame
+                Padding="10"
+                BorderColor="LightGray"
+                CornerRadius="5">
+                <VerticalStackLayout Spacing="5">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="Title"
+                            Text="Tag"
+                            VerticalOptions="Center" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding AddNewCommand}"
+                            CommandParameter="Tag"
+                            CornerRadius="25"
+                            FontSize="Large"
+                            HeightRequest="45"
+                            Text="+"
+                            WidthRequest="45" />
+                    </Grid>
+                    <CollectionView ItemsSource="{Binding Tags}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="model:Tag">
+                                <Label Padding="10,5" FontSize="Medium">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding Name}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ManagementDashboardViewModel}}, Path=EditItemCommand}" CommandParameter="{Binding}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

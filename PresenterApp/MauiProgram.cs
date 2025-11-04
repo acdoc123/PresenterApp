@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using PresenterApp.Services;
 using PresenterApp.ViewModels;
-using PresenterApp.Views;
 using CommunityToolkit.Maui;
+using PresenterApp.Views;
 
 namespace PresenterApp
 {
@@ -27,9 +27,17 @@ namespace PresenterApp
             // Đăng ký Services
             builder.Services.AddSingleton<DataAccessService>();
 
-            // Đăng ký Views và ViewModels
             builder.Services.AddSingleton<MainPage>();
-            builder.Services.AddSingleton<MainViewModel>();
+            // Trang Bảng điều khiển
+            builder.Services.AddSingleton<ManagementDashboardPage>();
+            builder.Services.AddSingleton<ManagementDashboardViewModel>();
+
+            // Các trang chỉnh sửa (dùng Transient vì chúng được tạo/hủy thường xuyên)
+            builder.Services.AddTransient<EditBookTypePage>();
+            builder.Services.AddTransient<EditBookTypeViewModel>();
+
+            builder.Services.AddTransient<EditBookPage>();
+            builder.Services.AddTransient<EditBookViewModel>();
 
 
             return builder.Build();

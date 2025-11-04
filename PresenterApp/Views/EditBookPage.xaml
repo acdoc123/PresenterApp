@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.EditBookPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:model="clr-namespace:PresenterApp.Models"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="{Binding Title}"
+    x:DataType="vm:EditBookViewModel">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="10">
+            <Label FontAttributes="Bold" Text="Tên Sách" />
+            <Entry Placeholder="Nhập tên sách..." Text="{Binding CurrentBook.Name}" />
+
+            <Label FontAttributes="Bold" Text="Loại Sách" />
+            <Picker
+                ItemDisplayBinding="{Binding Name}"
+                ItemsSource="{Binding BookTypes}"
+                SelectedItem="{Binding SelectedBookType}" />
+
+            <Label FontAttributes="Bold" Text="Tags" />
+            <Label FontAttributes="Italic" Text="(Chức năng chọn nhiều Tag sẽ được thêm ở đây)" />
+
+            <Button
+                Command="{Binding SaveBookCommand}"
+                HorizontalOptions="Fill"
+                Text="Lưu Sách" />
+            <Button
+                BackgroundColor="Red"
+                Command="{Binding DeleteBookCommand}"
+                HorizontalOptions="Fill"
+                IsVisible="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
+                Text="Xóa Sách" />
+
+            <Label
+                Margin="0,20,0,0"
+                FontAttributes="Bold"
+                FontSize="Medium"
+                Text="Thuộc tính" />
+
+            <CollectionView ItemsSource="{Binding CommonAttributes}" SelectionMode="None">
+                <CollectionView.Header>
+                    <Label FontAttributes="Italic" Text="Thuộc tính chung (từ Loại Sách):" />
+                </CollectionView.Header>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:AttributeDefinition">
+                        <Grid Padding="0,5" ColumnDefinitions="*,*">
+                            <Label Grid.Column="0" Text="{Binding Name}" />
+                            <Label
+                                Grid.Column="1"
+                                Text="{Binding Type}"
+                                TextColor="Gray" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label
+                Margin="0,10,0,0"
+                FontAttributes="Italic"
+                Text="Thuộc tính riêng:" />
+            <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="5">
+                <Entry
+                    Grid.Column="0"
+                    Placeholder="Tên thuộc tính"
+                    Text="{Binding NewAttributeName}" />
+                <Picker
+                    Title="Kiểu dữ liệu"
+                    Grid.Column="1"
+                    ItemsSource="{Binding FieldTypes}"
+                    SelectedItem="{Binding NewAttributeType}" />
+                <Button
+                    Grid.Column="2"
+                    Command="{Binding AddPrivateAttributeCommand}"
+                    Text="Thêm" />
+            </Grid>
+
+            <CollectionView
+                Margin="0,10,0,0"
+                ItemsSource="{Binding PrivateAttributes}"
+                SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:AttributeDefinition">
+                        <Grid Padding="0,5" ColumnDefinitions="*,*,Auto">
+                            <Label
+                                Grid.Column="0"
+                                Text="{Binding Name}"
+                                VerticalOptions="Center" />
+                            <Label
+                                Grid.Column="1"
+                                Text="{Binding Type}"
+                                VerticalOptions="Center" />
+                            <Button
+                                Grid.Column="2"
+                                BackgroundColor="Transparent"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=DeleteAttributeCommand}"
+                                CommandParameter="{Binding}"
+                                Text="Xóa"
+                                TextColor="Red" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <BoxView
+                Margin="0,20"
+                HeightRequest="1"
+                Color="LightGray" />
+
+            <Label
+                FontAttributes="Bold"
+                FontSize="Medium"
+                Text="Nội dung Sách" />
+            <Button
+                Command="{Binding AddContentEntryCommand}"
+                HorizontalOptions="Fill"
+                IsEnabled="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
+                Text="Thêm Nội dung Mới" />
+            <Label
+                FontAttributes="Italic"
+                IsVisible="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}, ConverterParameter=invert}"
+                Text="Lưu sách trước khi thêm nội dung"
+                TextColor="Gray" />
+
+            <CollectionView
+                Margin="0,10,0,0"
+                ItemsSource="{Binding ContentEntries}"
+                SelectionMode="None">
+                <CollectionView.Header>
+                    <Label FontAttributes="Italic" Text="Các nội dung đã thêm:" />
+                </CollectionView.Header>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:ContentEntry">
+                        <Grid Padding="0,5" ColumnDefinitions="*,Auto,Auto">
+                            <Label
+                                Grid.Column="0"
+                                Text="{Binding DateAdded, StringFormat='Nội dung thêm ngày {0:dd/MM/yyyy HH:mm}'}"
+                                VerticalOptions="Center" />
+                            <Button
+                                Grid.Column="1"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=EditContentEntryCommand}"
+                                CommandParameter="{Binding}"
+                                Text="Sửa" />
+                            <Button
+                                Grid.Column="2"
+                                BackgroundColor="Transparent"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=DeleteContentEntryCommand}"
+                                CommandParameter="{Binding}"
+                                Text="Xóa"
+                                TextColor="Red" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
