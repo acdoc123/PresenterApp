@@ -20,8 +20,19 @@
                 SelectedItem="{Binding SelectedBookType}" />
 
             <Label FontAttributes="Bold" Text="Tags" />
-            <Label FontAttributes="Italic" Text="(Chức năng chọn nhiều Tag sẽ được thêm ở đây)" />
-
+            <CollectionView
+                HeightRequest="150"
+                ItemsSource="{Binding SelectableTags}"
+                SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="model:SelectableTag">
+                        <HorizontalStackLayout Padding="0,5" Spacing="10">
+                            <CheckBox IsChecked="{Binding IsSelected}" />
+                            <Label Text="{Binding Tag.Name}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
             <Button
                 Command="{Binding SaveBookCommand}"
                 HorizontalOptions="Fill"

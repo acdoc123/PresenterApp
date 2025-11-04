@@ -10,5 +10,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(ManagementDashboardPage), typeof(ManagementDashboardPage));
         Routing.RegisterRoute(nameof(EditBookTypePage), typeof(EditBookTypePage));
         Routing.RegisterRoute(nameof(EditBookPage), typeof(EditBookPage));
+        Routing.RegisterRoute(nameof(EditTagPage), typeof(EditTagPage));
+        Routing.RegisterRoute(nameof(EditContentEntryPage), typeof(EditContentEntryPage));
     }
 }

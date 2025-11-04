@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.EditContentEntryPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:PresenterApp.Views"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="{Binding Title}"
+    x:DataType="vm:EditContentEntryViewModel">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="TextTemplate" x:DataType="vm:DynamicAttributeViewModel">
+                <VerticalStackLayout Padding="0,10">
+                    <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
+                    <Entry Placeholder="{Binding DisplayName}" Text="{Binding StringValue}" />
+                </VerticalStackLayout>
+            </DataTemplate>
+
+            <DataTemplate x:Key="TextAreaTemplate" x:DataType="vm:DynamicAttributeViewModel">
+                <VerticalStackLayout Padding="0,10">
+                    <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
+                    <Editor
+                        AutoSize="Disabled"
+                        HeightRequest="150"
+                        Placeholder="{Binding DisplayName}"
+                        Text="{Binding StringValue}" />
+                </VerticalStackLayout>
+            </DataTemplate>
+
+            <DataTemplate x:Key="NumberTemplate" x:DataType="vm:DynamicAttributeViewModel">
+                <VerticalStackLayout Padding="0,10">
+                    <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
+                    <Entry
+                        Keyboard="Numeric"
+                        Placeholder="{Binding DisplayName}"
+                        Text="{Binding StringValue}" />
+                </VerticalStackLayout>
+            </DataTemplate>
+
+            <local:AttributeTemplateSelector
+                x:Key="AttributeSelector"
+                NumberTemplate="{StaticResource NumberTemplate}"
+                TextAreaTemplate="{StaticResource TextAreaTemplate}"
+                TextTemplate="{StaticResource TextTemplate}" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout
+                Padding="20"
+                BindableLayout.ItemTemplateSelector="{StaticResource AttributeSelector}"
+                BindableLayout.ItemsSource="{Binding DynamicAttributes}"
+                Spacing="5" />
+        </ScrollView>
+
+        <Button
+            Grid.Row="1"
+            Margin="20"
+            Command="{Binding SaveContentEntryCommand}"
+            Text="Lưu Nội Dung" />
+    </Grid>
+</ContentPage>

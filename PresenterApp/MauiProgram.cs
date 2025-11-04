@@ -39,6 +39,12 @@ namespace PresenterApp
             builder.Services.AddTransient<EditBookPage>();
             builder.Services.AddTransient<EditBookViewModel>();
 
+            builder.Services.AddTransient<EditTagPage>();
+            builder.Services.AddTransient<EditTagViewModel>();
+
+            builder.Services.AddTransient<EditContentEntryPage>();
+            builder.Services.AddTransient<EditContentEntryViewModel>();
+
 
             return builder.Build();
         }

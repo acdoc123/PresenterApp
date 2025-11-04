@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PresenterApp.Models;
 using PresenterApp.Services;
+using PresenterApp.Views;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -21,8 +22,10 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         ObservableCollection<BookType> bookTypes = new();
 
+        // --- THAY ĐỔI TỪ ĐÂY ---
         [ObservableProperty]
-        ObservableCollection<Tag> allTags = new();
+        ObservableCollection<SelectableTag> selectableTags = new();
+        // --- KẾT THÚC THAY ĐỔI ---
 
         // --- Mục đã chọn ---
         [ObservableProperty]
@@ -70,6 +73,25 @@ namespace PresenterApp.ViewModels
                 var bts = await _dataAccess.GetBookTypesAsync();
                 foreach (var bt in bts) BookTypes.Add(bt);
 
+                // Tải tất cả Tags và các Tag đã chọn
+                var allTags = await _dataAccess.GetTagsAsync();
+                var selectedTagIds = new HashSet<int>();
+                if (CurrentBook.Id != 0)
+                {
+                    var selectedBookTags = await _dataAccess.GetTagsForBookAsync(CurrentBook.Id);
+                    selectedTagIds = selectedBookTags.Select(t => t.TagId).ToHashSet();
+                }
+
+                SelectableTags.Clear();
+                foreach (var tag in allTags)
+                {
+                    SelectableTags.Add(new SelectableTag
+                    {
+                        Tag = tag,
+                        IsSelected = selectedTagIds.Contains(tag.Id)
+                    });
+                }
+
                 if (CurrentBook.Id != 0)
                 {
                     // Tải BookType đã chọn
@@ -81,8 +103,6 @@ namespace PresenterApp.ViewModels
                     // Tải danh sách nội dung
                     await LoadContentEntriesAsync();
                 }
-
-                // TODO: Tải AllTags và các Tag đã chọn cho sách
             }
             finally
             {
@@ -93,7 +113,6 @@ namespace PresenterApp.ViewModels
         // --- Xử lý Thuộc tính ---
         partial void OnSelectedBookTypeChanged(BookType value)
         {
-            // Khi chọn một Loại Sách, tải các thuộc tính chung của nó
             LoadCommonAttributesAsync();
         }
 
@@ -126,7 +145,7 @@ namespace PresenterApp.ViewModels
             {
                 Name = NewAttributeName,
                 Type = NewAttributeType,
-                BookId = CurrentBook.Id // Liên kết với Sách này
+                BookId = CurrentBook.Id
             };
 
             await _dataAccess.SaveAttributeDefinitionAsync(newAttr);
@@ -153,12 +172,14 @@ namespace PresenterApp.ViewModels
             }
 
             CurrentBook.BookTypeId = SelectedBookType.Id;
-            await _dataAccess.SaveBookAsync(CurrentBook);
+            await _dataAccess.SaveBookAsync(CurrentBook); // Lưu sách để lấy ID (nếu là sách mới)
 
-            // TODO: Lưu các Tag đã chọn (BookTag)
+            // Lưu các Tag đã chọn
+            var tagsToSave = SelectableTags.Where(t => t.IsSelected).Select(t => t.Tag).ToList();
+            await _dataAccess.SetTagsForBookAsync(CurrentBook.Id, tagsToSave);
 
             Title = $"Sửa: {CurrentBook.Name}";
-            OnPropertyChanged(nameof(CurrentBook)); // Kích hoạt IsVisible cho các nút
+            OnPropertyChanged(nameof(CurrentBook));
             await Shell.Current.DisplayAlert("Thành công", "Đã lưu Sách.", "OK");
         }
 
@@ -185,19 +206,23 @@ namespace PresenterApp.ViewModels
         async Task AddContentEntryAsync()
         {
             // Điều hướng đến trang thêm nội dung
-            await Shell.Current.DisplayAlert("Chức năng", "Trang 'Thêm Nội Dung' (với các trường động) sẽ mở ra từ đây.", "OK");
-            // Ví dụ điều hướng:
-            // await Shell.Current.GoToAsync(nameof(AddContentEntryPage), true, new Dictionary<string, object>
-            // {
-            //     { "Book", CurrentBook }
-            // });
+            await Shell.Current.GoToAsync(nameof(EditContentEntryPage), true, new Dictionary<string, object>
+            {
+                { "Book", CurrentBook },
+                { "Entry", new ContentEntry { BookId = CurrentBook.Id } } // Gửi một entry mới
+            });
         }
 
         [RelayCommand]
         async Task EditContentEntryAsync(ContentEntry entry)
         {
-            await Shell.Current.DisplayAlert("Chức năng", $"Trang 'Sửa Nội Dung' cho mục {entry.Id} sẽ mở ra.", "OK");
-        }
+            // Điều hướng đến trang sửa nội dung
+            await Shell.Current.GoToAsync(nameof(EditContentEntryPage), true, new Dictionary<string, object>
+            {
+                { "Book", CurrentBook }, // Gửi Sách (để biết các thuộc tính)
+                { "Entry", entry } // Gửi Entry (để biết các giá trị)
+            });
+                  }
 
         [RelayCommand]
         async Task DeleteContentEntryAsync(ContentEntry entry)

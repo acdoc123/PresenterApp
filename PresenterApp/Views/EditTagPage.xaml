@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.EditTagPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="{Binding Title}"
+    x:DataType="vm:EditTagViewModel">
+
+    <VerticalStackLayout Padding="20" Spacing="10">
+        <Label FontAttributes="Bold" Text="Tên Tag" />
+        <Entry Placeholder="Nhập tên tag..." Text="{Binding CurrentTag.Name}" />
+
+        <Button
+            Command="{Binding SaveTagCommand}"
+            HorizontalOptions="Fill"
+            Text="Lưu Tag" />
+        <Button
+            BackgroundColor="Red"
+            Command="{Binding DeleteTagCommand}"
+            HorizontalOptions="Fill"
+            IsVisible="{Binding CurrentTag.Id, Converter={StaticResource IntToBoolConverter}}"
+            Text="Xóa Tag" />
+    </VerticalStackLayout>
+
+</ContentPage>

@@ -78,7 +78,13 @@ namespace PresenterApp.ViewModels
                     { "Item", b }
                 });
             }
-            // Tương tự cho Tag...
+            else if (item is Tag t)
+            {
+                await Shell.Current.GoToAsync(nameof(EditTagPage), true, new Dictionary<string, object>
+                {
+                    { "Item", t }
+                });
+            }
         }
 
         [RelayCommand]
@@ -99,7 +105,13 @@ namespace PresenterApp.ViewModels
                     { "Item", new Book() }
                 });
             }
-            // Tương tự cho Tag...
+            else if (itemType == "Tag")
+            {
+                await Shell.Current.GoToAsync(nameof(EditTagPage), true, new Dictionary<string, object>
+                {
+                    { "Item", new Tag() }
+                });
+            }
         }
     }
 }
