@@ -128,6 +128,10 @@
                             <DataTemplate x:DataType="vm:BookSummaryViewModel">
                                 <VerticalStackLayout Padding="10" Spacing="5">
                                     <Grid ColumnDefinitions="*,Auto">
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding ToggleExpandCommand}" />
+                                        </Grid.GestureRecognizers>
+
                                         <Label Grid.Column="0" VerticalOptions="Center">
                                             <Label.FormattedText>
                                                 <FormattedString>

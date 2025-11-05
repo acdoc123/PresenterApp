@@ -168,9 +168,26 @@
                 Text="Nội dung Sách" />
 
             <SearchBar
+                Grid.Row="5"
                 IsEnabled="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
-                Placeholder="Lọc nội dung theo thuộc tính 1 &amp; 2..."
+                Placeholder="Lọc nội dung theo thuộc tính..."
+                SearchCommand="{Binding ExecuteContentSearchCommand}"
                 Text="{Binding ContentSearchText}" />
+            <Grid
+                Padding="0,0,0,10"
+                ColumnDefinitions="*,Auto"
+                ColumnSpacing="10">
+                <Picker
+                    Title="Lọc theo Thuộc tính"
+                    Grid.Column="0"
+                    ItemDisplayBinding="{Binding Name}"
+                    ItemsSource="{Binding FilterAttributes}"
+                    SelectedItem="{Binding SelectedAttribute}" />
+                <HorizontalStackLayout Grid.Column="1" VerticalOptions="Center">
+                    <CheckBox IsChecked="{Binding IsExactSearch}" />
+                    <Label Text="Chính xác" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
 
             <Button
                 Command="{Binding AddContentEntryCommand}"

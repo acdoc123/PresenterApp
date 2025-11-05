@@ -84,7 +84,8 @@ namespace PresenterApp.ViewModels
             {
                 var bookTypes = await _dataAccess.GetBookTypesAsync();
                 filterBookTypes.Clear();
-                filterBookTypes.Add(new BookType { Id = 0, Name = "Tất cả Loại Sách" }); // Thêm mục "Tất cả"
+                var allBookTypesOption = new BookType { Id = 0, Name = "Tất cả Loại Sách" };
+                filterBookTypes.Add(allBookTypesOption);
                 foreach (var bt in bookTypes) filterBookTypes.Add(bt);
 
                 _allBooks = (await _dataAccess.GetBooksAsync()).ToList();
@@ -104,7 +105,8 @@ namespace PresenterApp.ViewModels
                 _allAttributes = _allAttributes.GroupBy(ad => ad.Name).Select(g => g.First()).ToList();
 
                 // Đặt lại các bộ lọc
-                OnSelectedBookTypeChanged(null);
+                //OnSelectedBookTypeChanged(null);
+                SelectedBookType = allBookTypesOption;
 
                 // Chạy tìm kiếm mặc định (tất cả nội dung)
                 await ExecuteSearchAsync();
