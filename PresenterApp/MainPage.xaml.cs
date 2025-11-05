@@ -1,20 +1,23 @@
 ﻿// File: MainPage.xaml.cs
-using PresenterApp.Views; // Cần thêm namespace này
+using PresenterApp.ViewModels;
 
 namespace PresenterApp
 {
     public partial class MainPage : ContentPage
     {
-        public MainPage()
+        private readonly HomeViewModel _viewModel;
+        public MainPage(HomeViewModel viewModel)
         {
             InitializeComponent();
+            BindingContext = viewModel;
+            _viewModel = viewModel;
         }
 
-        // Thay thế OnCounterClicked
-        private async void OnManageClicked(object? sender, EventArgs e)
+        protected override void OnAppearing()
         {
-            // Điều hướng đến trang Bảng điều khiển mới
-            await Shell.Current.GoToAsync(nameof(ManagementDashboardPage));
+            base.OnAppearing();
+            // Tải (hoặc tải lại) danh sách sách mỗi khi quay lại trang chủ
+            _viewModel.LoadBooksCommand.ExecuteAsync(null);
         }
     }
 }

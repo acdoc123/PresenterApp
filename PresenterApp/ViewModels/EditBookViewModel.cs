@@ -18,18 +18,15 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         Book currentBook;
 
-        // --- Danh sách cho Picker ---
         [ObservableProperty]
         ObservableCollection<BookType> bookTypes = new();
 
         [ObservableProperty]
         ObservableCollection<Tag> selectedTags = new();
 
-        // --- Mục đã chọn ---
         [ObservableProperty]
         BookType selectedBookType;
 
-        // --- Thuộc tính ---
         [ObservableProperty]
         ObservableCollection<AttributeDefinition> commonAttributes = new();
 
@@ -44,9 +41,16 @@ namespace PresenterApp.ViewModels
 
         public ObservableCollection<FieldType> FieldTypes { get; } = new(System.Enum.GetValues(typeof(FieldType)).Cast<FieldType>());
 
-        // --- Nội dung ---
+        // --- Logic Lọc/Tìm kiếm ---
         [ObservableProperty]
-        ObservableCollection<ContentEntryViewModel> contentEntries = new();
+        string contentSearchText = string.Empty;
+
+        // Danh sách đầy đủ
+        private List<ContentEntryViewModel> _allContentEntries = new();
+
+        // Danh sách đã lọc để hiển thị
+        [ObservableProperty]
+        ObservableCollection<ContentEntryViewModel> filteredContentEntries = new();
 
         [ObservableProperty]
         bool isEditingBookDetails;
@@ -59,31 +63,37 @@ namespace PresenterApp.ViewModels
         public void Initialize(Book book)
         {
             CurrentBook = book;
-
             if (book.Id == 0)
             {
-                // Sách Mới: Luôn ở chế độ sửa
                 Title = "Thêm Sách Mới";
                 IsEditingBookDetails = true;
             }
             else
             {
-                // Sách Cũ: Bắt đầu ở chế độ chỉ xem nội dung
-                Title = CurrentBook.Name; // Chỉ hiển thị tên sách
+                Title = CurrentBook.Name;
                 IsEditingBookDetails = false;
             }
         }
 
-        [RelayCommand]
-        void ToggleEditMode()
+        // Hàm lọc
+        partial void OnContentSearchTextChanged(string value)
         {
-            IsEditingBookDetails = !IsEditingBookDetails;
+            FilterContentEntries();
+        }
 
-            // Cập nhật tiêu đề trang cho phù hợp
-            if (IsEditingBookDetails)
-                Title = $"Sửa: {CurrentBook.Name}";
-            else
-                Title = CurrentBook.Name;
+        private void FilterContentEntries()
+        {
+            var filtered = _allContentEntries
+                .Where(vm => string.IsNullOrWhiteSpace(ContentSearchText)
+                             || (vm.SummaryText1 != null && vm.SummaryText1.Contains(ContentSearchText, StringComparison.OrdinalIgnoreCase))
+                             || (vm.SummaryText2 != null && vm.SummaryText2.Contains(ContentSearchText, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            FilteredContentEntries.Clear();
+            foreach (var vm in filtered)
+            {
+                FilteredContentEntries.Add(vm);
+            }
         }
 
         [RelayCommand]
@@ -93,20 +103,16 @@ namespace PresenterApp.ViewModels
             IsBusy = true;
             try
             {
-                // Tải danh sách Loại Sách
                 BookTypes.Clear();
                 var bts = await _dataAccess.GetBookTypesAsync();
                 foreach (var bt in bts) BookTypes.Add(bt);
 
-                // Tải các Tag đã chọn
                 SelectedTags.Clear();
                 if (CurrentBook.Id != 0)
                 {
-                    // Lấy các bảng quan hệ
                     var selectedBookTagsRelations = await _dataAccess.GetTagsForBookAsync(CurrentBook.Id);
                     if (selectedBookTagsRelations.Any())
                     {
-                        // Lấy thông tin Tag đầy đủ
                         var allTags = await _dataAccess.GetTagsAsync();
                         var selectedTagIds = selectedBookTagsRelations.Select(t => t.TagId).ToHashSet();
                         foreach (var tag in allTags.Where(t => selectedTagIds.Contains(t.Id)))
@@ -118,14 +124,9 @@ namespace PresenterApp.ViewModels
 
                 if (CurrentBook.Id != 0)
                 {
-                    // Tải BookType đã chọn
                     SelectedBookType = BookTypes.FirstOrDefault(b => b.Id == CurrentBook.BookTypeId);
-
-                    // Tải thuộc tính riêng
                     await LoadPrivateAttributesAsync();
-
-                    // Tải danh sách nội dung
-                    await LoadContentEntriesAsync();
+                    await LoadContentEntriesAsync(); // Đã bao gồm LoadCommonAttributes
                 }
             }
             finally
@@ -134,7 +135,6 @@ namespace PresenterApp.ViewModels
             }
         }
 
-        // --- Xử lý Thuộc tính ---
         partial void OnSelectedBookTypeChanged(BookType value)
         {
             LoadCommonAttributesAsync();
@@ -164,14 +164,12 @@ namespace PresenterApp.ViewModels
                 await Shell.Current.DisplayAlert("Lỗi", "Vui lòng lưu Sách trước khi thêm thuộc tính riêng.", "OK");
                 return;
             }
-
             var newAttr = new AttributeDefinition
             {
                 Name = NewAttributeName,
                 Type = NewAttributeType,
                 BookId = CurrentBook.Id
             };
-
             await _dataAccess.SaveAttributeDefinitionAsync(newAttr);
             PrivateAttributes.Add(newAttr);
             NewAttributeName = string.Empty;
@@ -183,42 +181,10 @@ namespace PresenterApp.ViewModels
             if (attribute == null) return;
             bool confirm = await Shell.Current.DisplayAlert("Xác nhận Xóa", $"Bạn có chắc muốn xóa thuộc tính '{attribute.Name}'?", "Có", "Không");
             if (!confirm) return;
-
             await _dataAccess.DeleteAttributeDefinitionAsync(attribute);
             PrivateAttributes.Remove(attribute);
         }
-        // --- Lệnh mở Modal/Trang chọn Tag ---
-        [RelayCommand]
-        async Task OpenTagSelectionModalAsync()
-        {
-            if (CurrentBook.Id == 0)
-            {
-                await Shell.Current.DisplayAlert("Lỗi", "Vui lòng lưu sách trước khi thêm tag.", "OK");
-                return;
-            }
 
-            await Shell.Current.GoToAsync(nameof(TagSelectionPage), true, new Dictionary<string, object>
-            {
-                { "BookId", CurrentBook.Id }
-            });
-        }
-
-        //Lệnh xóa Tag khỏi Sách (nút 'x') ---
-        [RelayCommand]
-        async Task RemoveTagFromBookAsync(Tag tagToRemove)
-        {
-            if (tagToRemove == null) return;
-
-            // Thêm xác nhận
-            bool confirm = await Shell.Current.DisplayAlert("Xác nhận", $"Xóa tag '{tagToRemove.Name}' khỏi sách này?", "Có", "Không");
-            if (!confirm) return;
-
-            SelectedTags.Remove(tagToRemove);
-            // Lưu thay đổi ngay lập tức
-            await _dataAccess.SetTagsForBookAsync(CurrentBook.Id, SelectedTags.ToList());
-        }
-
-        // --- Xử lý Sách ---
         [RelayCommand]
         async Task SaveBookAsync()
         {
@@ -227,17 +193,12 @@ namespace PresenterApp.ViewModels
                 await Shell.Current.DisplayAlert("Lỗi", "Vui lòng nhập Tên Sách và chọn Loại Sách.", "OK");
                 return;
             }
-
             CurrentBook.BookTypeId = SelectedBookType.Id;
             await _dataAccess.SaveBookAsync(CurrentBook);
-
-            // Lưu các Tag đã chọn
-            var tagsToSave = SelectedTags.ToList();
-            await _dataAccess.SetTagsForBookAsync(CurrentBook.Id, tagsToSave);
-
+            CurrentBook.BookTypeId = SelectedBookType.Id;
+            await _dataAccess.SaveBookAsync(CurrentBook);
             Title = CurrentBook.Name;
             IsEditingBookDetails = false;
-
             OnPropertyChanged(nameof(CurrentBook));
             await Shell.Current.DisplayAlert("Thành công", "Đã lưu Sách.", "OK");
         }
@@ -253,23 +214,65 @@ namespace PresenterApp.ViewModels
             }
         }
 
-        // --- Xử lý Nội dung ---
+        [RelayCommand]
+        async Task OpenTagSelectionModalAsync()
+        {
+            if (CurrentBook.Id == 0)
+            {
+                await Shell.Current.DisplayAlert("Lỗi", "Vui lòng lưu sách trước khi thêm tag.", "OK");
+                return;
+            }
+            await Shell.Current.GoToAsync(nameof(TagSelectionPage), true, new Dictionary<string, object>
+            {
+                { "BookId", CurrentBook.Id }
+            });
+        }
+
+        [RelayCommand]
+        async Task RemoveTagFromBookAsync(Tag tagToRemove)
+        {
+            if (tagToRemove == null) return;
+            bool confirm = await Shell.Current.DisplayAlert("Xác nhận", $"Xóa tag '{tagToRemove.Name}' khỏi sách này?", "Có", "Không");
+            if (!confirm) return;
+            SelectedTags.Remove(tagToRemove);
+            await _dataAccess.SetTagsForBookAsync(CurrentBook.Id, SelectedTags.ToList());
+        }
+
+        [RelayCommand]
+        void ToggleEditMode()
+        {
+            IsEditingBookDetails = !IsEditingBookDetails;
+            if (IsEditingBookDetails)
+                Title = $"Sửa: {CurrentBook.Name}";
+            else
+                Title = CurrentBook.Name;
+        }
+
+        // --- CẬP NHẬT LOGIC TẢI NỘI DUNG ---
         async Task LoadContentEntriesAsync()
         {
-            ContentEntries.Clear();
-            var commonAttrs = await _dataAccess.GetAttributesForBookTypeAsync(CurrentBook.BookTypeId);
-            var privateAttrs = await _dataAccess.GetAttributesForBookAsync(CurrentBook.Id);
-            var firstAttribute = commonAttrs.Concat(privateAttrs).FirstOrDefault();
+            // Tải *trước* các thuộc tính
+            await LoadCommonAttributesAsync();
+            await LoadPrivateAttributesAsync();
+            var allAttributes = CommonAttributes.Concat(PrivateAttributes).ToList();
 
+            _allContentEntries.Clear();
             var entries = await _dataAccess.GetContentEntriesAsync(CurrentBook.Id);
+
+            var loadTasks = new List<Task>();
             foreach (var entry in entries)
             {
-                // Tạo ViewModel và tải tóm tắt
                 var vm = new ContentEntryViewModel(entry);
-                ContentEntries.Add(vm);
-                // Tải tóm tắt (không cần chờ)
-                _ = vm.LoadSummaryAsync(_dataAccess, firstAttribute);
+                _allContentEntries.Add(vm);
+                // Thêm tác vụ tải tóm tắt vào danh sách
+                loadTasks.Add(vm.LoadSummaryAsync(_dataAccess, allAttributes));
             }
+
+            // Chờ tất cả tóm tắt tải xong
+            await Task.WhenAll(loadTasks);
+
+            // Lọc danh sách (hiển thị tất cả lúc đầu)
+            FilterContentEntries();
         }
 
         [RelayCommand]
@@ -289,7 +292,7 @@ namespace PresenterApp.ViewModels
             await Shell.Current.GoToAsync(nameof(EditContentEntryPage), true, new Dictionary<string, object>
             {
                 { "Book", CurrentBook },
-                { "Entry", entryVM.Entry } // Truyền Entry gốc
+                { "Entry", entryVM.Entry }
             });
         }
 
@@ -301,7 +304,8 @@ namespace PresenterApp.ViewModels
             if (confirm)
             {
                 await _dataAccess.DeleteContentEntryAsync(entryVM.Entry);
-                ContentEntries.Remove(entryVM);
+                _allContentEntries.Remove(entryVM); // Xóa khỏi danh sách master
+                FilterContentEntries(); // Lọc lại danh sách hiển thị
             }
         }
     }

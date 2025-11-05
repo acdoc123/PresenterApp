@@ -2,27 +2,113 @@
 <ContentPage
     x:Class="PresenterApp.MainPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:model="clr-namespace:PresenterApp.Models"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="{Binding Title}"
+    x:DataType="vm:HomeViewModel">
 
-    <ScrollView>
-        <VerticalStackLayout
-            Padding="30,0"
-            Spacing="25"
-            VerticalOptions="Center">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-            <Label
-                SemanticProperties.HeadingLevel="Level1"
-                Style="{StaticResource Headline}"
-                Text="Chào mừng đến với Trình quản lý Sách" />
+        <Border
+            Grid.Column="0"
+            Padding="0"
+            Stroke="LightGray"
+            StrokeThickness="1">
+            <Grid RowDefinitions="Auto,Auto,Auto,*">
 
+                <Label
+                    Grid.Row="0"
+                    Padding="10"
+                    FontAttributes="Bold"
+                    FontSize="Title"
+                    Text="Quản lý Sách" />
+
+                <Grid
+                    Grid.Row="1"
+                    Padding="10,0,10,10"
+                    ColumnDefinitions="*,Auto"
+                    ColumnSpacing="5">
+                    <SearchBar
+                        Grid.Column="0"
+                        Placeholder="Tìm kiếm sách..."
+                        Text="{Binding SearchText}" />
+                    <Button
+                        Grid.Column="1"
+                        Command="{Binding GoToManagementCommand}"
+                        Text="Thêm/Sửa"
+                        WidthRequest="120" />
+                </Grid>
+
+                <BoxView
+                    Grid.Row="2"
+                    HeightRequest="1"
+                    Color="LightGray" />
+
+                <ScrollView Grid.Row="3">
+                    <CollectionView ItemsSource="{Binding BookList}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BookSummaryViewModel">
+                                <VerticalStackLayout Padding="10" Spacing="5">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Button
+                                            Grid.Column="0"
+                                            BackgroundColor="Transparent"
+                                            Command="{Binding ToggleExpandCommand}"
+                                            FontAttributes="Bold"
+                                            FontSize="Large"
+                                            HorizontalOptions="Start"
+                                            Text="{Binding Book.Name}"
+                                            TextColor="{AppThemeBinding Light={StaticResource Black},
+                                                                        Dark={StaticResource White}}" />
+                                        <ActivityIndicator
+                                            Grid.Column="1"
+                                            IsRunning="{Binding IsLoadingContent}"
+                                            IsVisible="{Binding IsLoadingContent}" />
+                                    </Grid>
+
+                                    <VerticalStackLayout
+                                        Margin="20,0,0,0"
+                                        BindableLayout.ItemsSource="{Binding ContentEntries}"
+                                        IsVisible="{Binding IsExpanded}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ContentEntryViewModel">
+                                                <Frame
+                                                    Margin="0,5"
+                                                    Padding="10"
+                                                    BorderColor="LightGray"
+                                                    CornerRadius="5">
+                                                    <VerticalStackLayout>
+                                                        <Label FontAttributes="Bold" Text="{Binding SummaryText1}" />
+                                                        <Label
+                                                            FontSize="Small"
+                                                            Text="{Binding SummaryText2}"
+                                                            TextColor="Gray" />
+                                                    </VerticalStackLayout>
+                                                </Frame>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+
+                                    <BoxView HeightRequest="1" Color="{StaticResource Gray100}" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </ScrollView>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" BackgroundColor="{StaticResource Gray100}">
             <Button
-                x:Name="ManageButton"
-                Clicked="OnManageClicked"
-                HorizontalOptions="Fill"
-                SemanticProperties.Hint="Điều hướng đến trang quản lý"
-                Text="Thêm/ Sửa Sách và Thể loại" />
+                HorizontalOptions="Center"
+                Text="Chỉnh sửa slide"
+                VerticalOptions="Center" />
+        </Grid>
 
-        </VerticalStackLayout>
-    </ScrollView>
-
+    </Grid>
 </ContentPage>
