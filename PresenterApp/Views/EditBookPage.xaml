@@ -184,7 +184,7 @@
                     <Label FontAttributes="Italic" Text="Các nội dung đã thêm:" />
                 </CollectionView.Header>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="model:ContentEntryViewModel">
+                    <DataTemplate x:DataType="vm:ContentEntryViewModel">
                         <Grid Padding="0,5" ColumnDefinitions="*,Auto,Auto">
                             <Label
                                 Grid.Column="0"

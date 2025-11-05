@@ -13,7 +13,7 @@
         <ScrollView Grid.Row="0">
             <VerticalStackLayout BindableLayout.ItemsSource="{Binding AllTags}">
                 <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="model:SelectableTag">
+                    <DataTemplate x:DataType="vm:SelectableTag">
                         <Grid Padding="10,5" ColumnDefinitions="*,Auto,Auto">
                             <HorizontalStackLayout Grid.Column="0" Spacing="10">
                                 <CheckBox IsChecked="{Binding IsSelected}" />
