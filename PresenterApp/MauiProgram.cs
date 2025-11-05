@@ -45,6 +45,9 @@ namespace PresenterApp
             builder.Services.AddTransient<EditContentEntryPage>();
             builder.Services.AddTransient<EditContentEntryViewModel>();
 
+            builder.Services.AddTransient<TagSelectionPage>();
+            builder.Services.AddTransient<TagSelectionViewModel>();
+
 
             return builder.Build();
         }

@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.TagSelectionPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:model="clr-namespace:PresenterApp.Models"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="Chọn Tags"
+    x:DataType="vm:TagSelectionViewModel">
+
+    <Grid RowDefinitions="*,Auto,Auto">
+
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding AllTags}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="model:SelectableTag">
+                        <Grid Padding="10,5" ColumnDefinitions="*,Auto,Auto">
+                            <HorizontalStackLayout Grid.Column="0" Spacing="10">
+                                <CheckBox IsChecked="{Binding IsSelected}" />
+                                <Label
+                                    FontSize="Medium"
+                                    Text="{Binding Tag.Name}"
+                                    VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+
+                            <Button
+                                Grid.Column="1"
+                                BackgroundColor="Transparent"
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TagSelectionViewModel}}, Path=DeleteTagCommand}"
+                                CommandParameter="{Binding}"
+                                FontAttributes="Bold"
+                                Text="x"
+                                TextColor="Red" />
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <VerticalStackLayout
+            Grid.Row="1"
+            Padding="10"
+            Spacing="5">
+            <BoxView HeightRequest="1" Color="LightGray" />
+            <Label FontAttributes="Bold" Text="Thêm Tag mới" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <Entry
+                    Grid.Column="0"
+                    Placeholder="Nhập tên tag mới..."
+                    Text="{Binding NewTagName}" />
+                <Button
+                    Grid.Column="1"
+                    Command="{Binding AddNewTagCommand}"
+                    Text="Thêm" />
+            </Grid>
+        </VerticalStackLayout>
+
+        <Button
+            Grid.Row="2"
+            Margin="10"
+            Command="{Binding CloseAndSaveCommand}"
+            Text="Hoàn tất" />
+
+    </Grid>
+</ContentPage>

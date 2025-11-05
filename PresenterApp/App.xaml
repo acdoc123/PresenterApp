@@ -14,6 +14,7 @@
 
             <converters:IntToBoolConverter x:Key="IntToBoolConverter" />
             <converters:IsNullConverter x:Key="IsNullConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
 
         </ResourceDictionary>
     </Application.Resources>

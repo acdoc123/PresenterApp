@@ -81,6 +81,8 @@ namespace PresenterApp.ViewModels
         async Task DeleteAttributeAsync(AttributeDefinition attribute)
         {
             if (attribute == null) return;
+            bool confirm = await Shell.Current.DisplayAlert("Xác nhận Xóa", $"Bạn có chắc muốn xóa thuộc tính '{attribute.Name}'?", "Có", "Không");
+            if (!confirm) return;
             await _dataAccess.DeleteAttributeDefinitionAsync(attribute);
             CommonAttributes.Remove(attribute);
         }

@@ -10,112 +10,154 @@
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="10">
-            <Label FontAttributes="Bold" Text="Tên Sách" />
-            <Entry Placeholder="Nhập tên sách..." Text="{Binding CurrentBook.Name}" />
 
-            <Label FontAttributes="Bold" Text="Loại Sách" />
-            <Picker
-                ItemDisplayBinding="{Binding Name}"
-                ItemsSource="{Binding BookTypes}"
-                SelectedItem="{Binding SelectedBookType}" />
+            <VerticalStackLayout IsVisible="{Binding IsEditingBookDetails}" Spacing="10">
 
-            <Label FontAttributes="Bold" Text="Tags" />
-            <CollectionView
-                HeightRequest="150"
-                ItemsSource="{Binding SelectableTags}"
-                SelectionMode="None">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="model:SelectableTag">
-                        <HorizontalStackLayout Padding="0,5" Spacing="10">
-                            <CheckBox IsChecked="{Binding IsSelected}" />
-                            <Label Text="{Binding Tag.Name}" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-            <Button
-                Command="{Binding SaveBookCommand}"
-                HorizontalOptions="Fill"
-                Text="Lưu Sách" />
-            <Button
-                BackgroundColor="Red"
-                Command="{Binding DeleteBookCommand}"
-                HorizontalOptions="Fill"
-                IsVisible="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
-                Text="Xóa Sách" />
+                <Label FontAttributes="Bold" Text="Tên Sách" />
+                <Entry Placeholder="Nhập tên sách..." Text="{Binding CurrentBook.Name}" />
 
-            <Label
-                Margin="0,20,0,0"
-                FontAttributes="Bold"
-                FontSize="Medium"
-                Text="Thuộc tính" />
-
-            <CollectionView ItemsSource="{Binding CommonAttributes}" SelectionMode="None">
-                <CollectionView.Header>
-                    <Label FontAttributes="Italic" Text="Thuộc tính chung (từ Loại Sách):" />
-                </CollectionView.Header>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="model:AttributeDefinition">
-                        <Grid Padding="0,5" ColumnDefinitions="*,*">
-                            <Label Grid.Column="0" Text="{Binding Name}" />
-                            <Label
-                                Grid.Column="1"
-                                Text="{Binding Type}"
-                                TextColor="Gray" />
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-
-            <Label
-                Margin="0,10,0,0"
-                FontAttributes="Italic"
-                Text="Thuộc tính riêng:" />
-            <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="5">
-                <Entry
-                    Grid.Column="0"
-                    Placeholder="Tên thuộc tính"
-                    Text="{Binding NewAttributeName}" />
+                <Label FontAttributes="Bold" Text="Loại Sách" />
                 <Picker
-                    Title="Kiểu dữ liệu"
-                    Grid.Column="1"
-                    ItemsSource="{Binding FieldTypes}"
-                    SelectedItem="{Binding NewAttributeType}" />
-                <Button
-                    Grid.Column="2"
-                    Command="{Binding AddPrivateAttributeCommand}"
-                    Text="Thêm" />
-            </Grid>
+                    ItemDisplayBinding="{Binding Name}"
+                    ItemsSource="{Binding BookTypes}"
+                    SelectedItem="{Binding SelectedBookType}" />
 
-            <CollectionView
-                Margin="0,10,0,0"
-                ItemsSource="{Binding PrivateAttributes}"
-                SelectionMode="None">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="model:AttributeDefinition">
-                        <Grid Padding="0,5" ColumnDefinitions="*,*,Auto">
-                            <Label
-                                Grid.Column="0"
-                                Text="{Binding Name}"
-                                VerticalOptions="Center" />
-                            <Label
-                                Grid.Column="1"
-                                Text="{Binding Type}"
-                                VerticalOptions="Center" />
-                            <Button
-                                Grid.Column="2"
-                                BackgroundColor="Transparent"
-                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=DeleteAttributeCommand}"
-                                CommandParameter="{Binding}"
-                                Text="Xóa"
-                                TextColor="Red" />
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                <Label FontAttributes="Bold" Text="Tags" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <CollectionView
+                        Grid.Column="0"
+                        ItemsSource="{Binding SelectedTags}"
+                        SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="model:Tag">
+                                <Frame
+                                    Margin="0,0,5,5"
+                                    Padding="8,5"
+                                    BorderColor="Gray"
+                                    CornerRadius="8">
+                                    <HorizontalStackLayout Spacing="5">
+                                        <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                        <Button
+                                            Padding="0"
+                                            BackgroundColor="Transparent"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=RemoveTagFromBookCommand}"
+                                            CommandParameter="{Binding}"
+                                            HeightRequest="20"
+                                            Text="x"
+                                            TextColor="Gray"
+                                            WidthRequest="20" />
+                                    </HorizontalStackLayout>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout Orientation="Vertical" Span="3" />
+                        </CollectionView.ItemsLayout>
+                    </CollectionView>
+
+                    <Button
+                        Grid.Column="1"
+                        Command="{Binding OpenTagSelectionModalCommand}"
+                        CornerRadius="25"
+                        FontSize="Large"
+                        HeightRequest="45"
+                        Text="+"
+                        VerticalOptions="Start"
+                        WidthRequest="45" />
+                </Grid>
+                <Button
+                    Command="{Binding SaveBookCommand}"
+                    HorizontalOptions="Fill"
+                    Text="Lưu Sách" />
+                <Button
+                    BackgroundColor="Red"
+                    Command="{Binding DeleteBookCommand}"
+                    HorizontalOptions="Fill"
+                    IsVisible="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
+                    Text="Xóa Sách" />
+
+                <Label
+                    Margin="0,20,0,0"
+                    FontAttributes="Bold"
+                    FontSize="Medium"
+                    Text="Thuộc tính" />
+
+                <CollectionView ItemsSource="{Binding CommonAttributes}" SelectionMode="None">
+                    <CollectionView.Header>
+                        <Label FontAttributes="Italic" Text="Thuộc tính chung (từ Loại Sách):" />
+                    </CollectionView.Header>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="model:AttributeDefinition">
+                            <Grid Padding="0,5" ColumnDefinitions="*,*">
+                                <Label Grid.Column="0" Text="{Binding Name}" />
+                                <Label
+                                    Grid.Column="1"
+                                    Text="{Binding Type}"
+                                    TextColor="Gray" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label
+                    Margin="0,10,0,0"
+                    FontAttributes="Italic"
+                    Text="Thuộc tính riêng:" />
+                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="5">
+                    <Entry
+                        Grid.Column="0"
+                        Placeholder="Tên thuộc tính"
+                        Text="{Binding NewAttributeName}" />
+                    <Picker
+                        Title="Kiểu dữ liệu"
+                        Grid.Column="1"
+                        ItemsSource="{Binding FieldTypes}"
+                        SelectedItem="{Binding NewAttributeType}" />
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding AddPrivateAttributeCommand}"
+                        Text="Thêm" />
+                </Grid>
+
+                <CollectionView
+                    Margin="0,10,0,0"
+                    ItemsSource="{Binding PrivateAttributes}"
+                    SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="model:AttributeDefinition">
+                            <Grid Padding="0,5" ColumnDefinitions="*,*,Auto">
+                                <Label
+                                    Grid.Column="0"
+                                    Text="{Binding Name}"
+                                    VerticalOptions="Center" />
+                                <Label
+                                    Grid.Column="1"
+                                    Text="{Binding Type}"
+                                    VerticalOptions="Center" />
+                                <Button
+                                    Grid.Column="2"
+                                    BackgroundColor="Transparent"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=DeleteAttributeCommand}"
+                                    CommandParameter="{Binding}"
+                                    Text="Xóa"
+                                    TextColor="Red" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+            <Button
+                Margin="0,0,0,10"
+                Command="{Binding ToggleEditModeCommand}"
+                HorizontalOptions="Start"
+                IsEnabled="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
+                IsVisible="{Binding IsEditingBookDetails, Converter={StaticResource InvertedBoolConverter}}"
+                Text="Sửa thông tin sách" />
+
 
             <BoxView
-                Margin="0,20"
+                Margin="0,10"
                 HeightRequest="1"
                 Color="LightGray" />
 
@@ -142,11 +184,12 @@
                     <Label FontAttributes="Italic" Text="Các nội dung đã thêm:" />
                 </CollectionView.Header>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="model:ContentEntry">
+                    <DataTemplate x:DataType="model:ContentEntryViewModel">
                         <Grid Padding="0,5" ColumnDefinitions="*,Auto,Auto">
                             <Label
                                 Grid.Column="0"
-                                Text="{Binding DateAdded, StringFormat='Nội dung thêm ngày {0:dd/MM/yyyy HH:mm}'}"
+                                FontAttributes="Bold"
+                                Text="{Binding SummaryText}"
                                 VerticalOptions="Center" />
                             <Button
                                 Grid.Column="1"
