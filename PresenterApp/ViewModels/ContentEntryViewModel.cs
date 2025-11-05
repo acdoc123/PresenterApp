@@ -1,9 +1,10 @@
 ﻿// File: Models/ContentEntryViewModel.cs
 using CommunityToolkit.Mvvm.ComponentModel;
 using PresenterApp.Services;
+using PresenterApp.Models;
 using System.Threading.Tasks;
 
-namespace PresenterApp.Models
+namespace PresenterApp.ViewModels
 {
     // Lớp ViewModel này bao bọc ContentEntry để hiển thị tóm tắt động
     public partial class ContentEntryViewModel : ObservableObject

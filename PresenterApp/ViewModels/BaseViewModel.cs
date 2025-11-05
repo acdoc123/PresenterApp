@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace PresenterApp.Models;
+namespace PresenterApp.ViewModels;
 
 public partial class BaseViewModel : ObservableObject
 {

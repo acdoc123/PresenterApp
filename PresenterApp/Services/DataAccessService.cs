@@ -182,6 +182,14 @@ namespace PresenterApp.Services
             return await _database.Table<AttributeValue>().Where(val => val.ContentEntryId == contentEntryId).ToListAsync();
         }
 
+        public async Task<AttributeValue?> GetAttributeValueAsync(int contentEntryId, int attributeDefinitionId)
+        {
+            await Init();
+            return await _database.Table<AttributeValue>()
+                .Where(v => v.ContentEntryId == contentEntryId && v.AttributeDefinitionId == attributeDefinitionId)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task SaveAttributeValueAsync(AttributeValue value)
         {
             await Init();
