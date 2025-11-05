@@ -19,56 +19,83 @@
             Padding="0"
             Stroke="LightGray"
             StrokeThickness="1">
-            <Grid RowDefinitions="Auto,Auto,Auto,*">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+
+                <Button
+                    Grid.Row="0"
+                    Margin="10"
+                    Command="{Binding GoToManagementCommand}"
+                    Text="Thêm/Sửa Sách, Loại sách, Tags" />
 
                 <Label
-                    Grid.Row="0"
-                    Padding="10"
+                    Grid.Row="1"
+                    Padding="10,10,10,0"
                     FontAttributes="Bold"
                     FontSize="Title"
-                    Text="Quản lý Sách" />
+                    Text="Lọc và tìm kiếm nội dung" />
 
-                <Grid
-                    Grid.Row="1"
-                    Padding="10,0,10,10"
-                    ColumnDefinitions="*,Auto"
-                    ColumnSpacing="5">
-                    <SearchBar
-                        Grid.Column="0"
-                        Placeholder="Tìm kiếm sách..."
-                        Text="{Binding SearchText}" />
-                    <Button
-                        Grid.Column="1"
-                        Command="{Binding GoToManagementCommand}"
-                        Text="Thêm/Sửa"
-                        WidthRequest="120" />
-                </Grid>
+                <VerticalStackLayout
+                    Grid.Row="2"
+                    Padding="10,5,10,0"
+                    Spacing="5">
+                    <Picker
+                        Title="Lọc theo Loại Sách"
+                        ItemDisplayBinding="{Binding Name}"
+                        ItemsSource="{Binding FilterBookTypes}"
+                        SelectedItem="{Binding SelectedBookType}" />
+                    <Picker
+                        Title="Lọc theo Sách"
+                        ItemDisplayBinding="{Binding Name}"
+                        ItemsSource="{Binding FilterBooks}"
+                        SelectedItem="{Binding SelectedBook}" />
+                    <Picker
+                        Title="Lọc theo Thuộc tính"
+                        ItemDisplayBinding="{Binding Name}"
+                        ItemsSource="{Binding FilterAttributes}"
+                        SelectedItem="{Binding SelectedAttribute}" />
+                </VerticalStackLayout>
+
+                <SearchBar
+                    Grid.Row="3"
+                    Margin="10,5,10,10"
+                    Placeholder="Tìm kiếm trong thuộc tính đã lọc..."
+                    SearchCommand="{Binding ExecuteSearchCommand}"
+                    Text="{Binding SearchText}" />
 
                 <BoxView
-                    Grid.Row="2"
+                    Grid.Row="4"
                     HeightRequest="1"
                     Color="LightGray" />
 
-                <ScrollView Grid.Row="3">
-                    <CollectionView ItemsSource="{Binding BookList}" SelectionMode="None">
+                <ActivityIndicator
+                    Grid.Row="5"
+                    HorizontalOptions="Center"
+                    IsRunning="{Binding IsBusySearching}"
+                    IsVisible="{Binding IsBusySearching}"
+                    VerticalOptions="Center" />
+
+                <ScrollView Grid.Row="5" IsVisible="{Binding IsBusySearching, Converter={StaticResource InvertedBoolConverter}}">
+                    <CollectionView ItemsSource="{Binding SearchResults}" SelectionMode="None">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:BookSummaryViewModel">
                                 <VerticalStackLayout Padding="10" Spacing="5">
                                     <Grid ColumnDefinitions="*,Auto">
-                                        <Button
-                                            Grid.Column="0"
-                                            BackgroundColor="Transparent"
-                                            Command="{Binding ToggleExpandCommand}"
-                                            FontAttributes="Bold"
-                                            FontSize="Large"
-                                            HorizontalOptions="Start"
-                                            Text="{Binding Book.Name}"
-                                            TextColor="{AppThemeBinding Light={StaticResource Black},
-                                                                        Dark={StaticResource White}}" />
-                                        <ActivityIndicator
-                                            Grid.Column="1"
-                                            IsRunning="{Binding IsLoadingContent}"
-                                            IsVisible="{Binding IsLoadingContent}" />
+                                        <Label Grid.Column="0" VerticalOptions="Center">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span
+                                                        FontAttributes="Bold"
+                                                        FontSize="Large"
+                                                        Text="{Binding Book.Name}" />
+                                                    <Span Text=" (" />
+                                                    <Span
+                                                        FontAttributes="Italic"
+                                                        Text="{Binding ResultCountText}"
+                                                        TextColor="Gray" />
+                                                    <Span Text=")" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
                                     </Grid>
 
                                     <VerticalStackLayout
@@ -83,9 +110,15 @@
                                                     BorderColor="LightGray"
                                                     CornerRadius="5">
                                                     <VerticalStackLayout>
-                                                        <Label FontAttributes="Bold" Text="{Binding SummaryText1}" />
+                                                        <Label
+                                                            FontAttributes="Bold"
+                                                            LineBreakMode="TailTruncation"
+                                                            MaxLines="1"
+                                                            Text="{Binding SummaryText1}" />
                                                         <Label
                                                             FontSize="Small"
+                                                            LineBreakMode="TailTruncation"
+                                                            MaxLines="1"
                                                             Text="{Binding SummaryText2}"
                                                             TextColor="Gray" />
                                                     </VerticalStackLayout>

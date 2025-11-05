@@ -1,6 +1,7 @@
 ﻿// File: Services/DataAccessService.cs
 using PresenterApp.Models;
 using SQLite;
+using System.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -137,7 +138,17 @@ namespace PresenterApp.Services
             await Init();
             return await _database.Table<AttributeDefinition>().Where(ad => ad.BookId == bookId).ToListAsync();
         }
+        public async Task<List<AttributeDefinition>> GetAllAttributesForBookAsync(int bookId)
+        {
+            await Init();
+            var book = await GetBookAsync(bookId);
+            if (book == null) return new List<AttributeDefinition>();
 
+            var commonAttrs = await GetAttributesForBookTypeAsync(book.BookTypeId);
+            var privateAttrs = await GetAttributesForBookAsync(bookId);
+
+            return commonAttrs.Concat(privateAttrs).ToList();
+        }
         public async Task<int> SaveAttributeDefinitionAsync(AttributeDefinition attribute)
         {
             await Init();
@@ -158,7 +169,63 @@ namespace PresenterApp.Services
             await Init();
             return await _database.Table<ContentEntry>().Where(ce => ce.BookId == bookId).ToListAsync();
         }
+        public async Task<List<ContentEntry>> SearchContentEntriesAsync(string searchText, int? bookTypeId, int? bookId, int? attributeId)
+        {
+            await Init();
 
+            // Bắt đầu truy vấn
+            var query = new StringBuilder("SELECT DISTINCT T1.* FROM ContentEntry AS T1");
+            var args = new List<object>();
+
+            // Luôn cần join với Sách (Book) để lọc theo BookType
+            query.Append(" INNER JOIN Book AS T2 ON T1.BookId = T2.Id");
+
+            // Chỉ join Bảng Giá trị (AttributeValue) nếu cần thiết
+            if (!string.IsNullOrWhiteSpace(searchText) || attributeId.HasValue)
+            {
+                query.Append(" INNER JOIN AttributeValue AS T3 ON T1.Id = T3.ContentEntryId");
+            }
+
+            var whereClauses = new List<string>();
+
+            // Lọc theo BookType
+            if (bookTypeId.HasValue)
+            {
+                whereClauses.Add("T2.BookTypeId = ?");
+                args.Add(bookTypeId.Value);
+            }
+
+            // Lọc theo Sách (BookId)
+            if (bookId.HasValue)
+            {
+                whereClauses.Add("T1.BookId = ?");
+                args.Add(bookId.Value);
+            }
+
+            // Lọc theo Thuộc tính cụ thể
+            if (attributeId.HasValue)
+            {
+                whereClauses.Add("T3.AttributeDefinitionId = ?");
+                args.Add(attributeId.Value);
+            }
+
+            // Lọc theo văn bản tìm kiếm (trong AttributeValue)
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                whereClauses.Add("T3.Value LIKE ?");
+                args.Add($"%{searchText}%");
+            }
+
+            // Gắn các mệnh đề WHERE
+            if (whereClauses.Any())
+            {
+                query.Append(" WHERE " + string.Join(" AND ", whereClauses));
+            }
+
+            query.Append(" ORDER BY T1.DateAdded DESC");
+
+            return await _database.QueryAsync<ContentEntry>(query.ToString(), args.ToArray());
+        }
         public async Task<int> SaveContentEntryAsync(ContentEntry entry)
         {
             await Init();

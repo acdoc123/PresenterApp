@@ -65,6 +65,7 @@
                         VerticalOptions="Start"
                         WidthRequest="45" />
                 </Grid>
+
                 <Button
                     Command="{Binding SaveBookCommand}"
                     HorizontalOptions="Fill"
@@ -192,17 +193,29 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:ContentEntryViewModel">
                         <Grid Padding="0,5" ColumnDefinitions="*,Auto,Auto">
-                            <VerticalStackLayout Grid.Column="0">
+
+                            <Grid
+                                Grid.Column="0"
+                                ColumnDefinitions="*,*"
+                                ColumnSpacing="10"
+                                VerticalOptions="Center">
                                 <Label
+                                    Grid.Column="0"
                                     FontAttributes="Bold"
+                                    LineBreakMode="TailTruncation"
+                                    MaxLines="1"
                                     Text="{Binding SummaryText1}"
                                     VerticalOptions="Center" />
                                 <Label
+                                    Grid.Column="1"
                                     FontSize="Small"
+                                    LineBreakMode="TailTruncation"
+                                    MaxLines="1"
                                     Text="{Binding SummaryText2}"
                                     TextColor="Gray"
                                     VerticalOptions="Center" />
-                            </VerticalStackLayout>
+                            </Grid>
+
                             <Button
                                 Grid.Column="1"
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=EditContentEntryCommand}"

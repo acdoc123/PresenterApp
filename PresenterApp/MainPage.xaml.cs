@@ -17,7 +17,7 @@ namespace PresenterApp
         {
             base.OnAppearing();
             // Tải (hoặc tải lại) danh sách sách mỗi khi quay lại trang chủ
-            _viewModel.LoadBooksCommand.ExecuteAsync(null);
+            _viewModel.LoadFiltersCommand.ExecuteAsync(null);
         }
     }
 }
