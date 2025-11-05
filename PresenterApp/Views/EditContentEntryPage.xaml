@@ -38,9 +38,67 @@
                 </VerticalStackLayout>
             </DataTemplate>
 
+            <DataTemplate x:Key="ImageTemplate" x:DataType="vm:DynamicAttributeViewModel">
+                <VerticalStackLayout Padding="0,10" Spacing="5">
+                    <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
+
+                    <Image
+                        Aspect="AspectFit"
+                        HeightRequest="150"
+                        IsVisible="{Binding IsFileSelected}"
+                        Source="{Binding StringValue}"
+                        WidthRequest="150" />
+
+                    <Button
+                        Command="{Binding PickImageCommand}"
+                        HorizontalOptions="Start"
+                        IsVisible="{Binding IsFileSelected, Converter={StaticResource InvertedBoolConverter}}"
+                        Text="Chọn Ảnh" />
+
+                    <Button
+                        BackgroundColor="Transparent"
+                        Command="{Binding ClearFileCommand}"
+                        HorizontalOptions="Start"
+                        IsVisible="{Binding IsFileSelected}"
+                        Text="Xóa Ảnh"
+                        TextColor="Red" />
+                </VerticalStackLayout>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PdfTemplate" x:DataType="vm:DynamicAttributeViewModel">
+                <VerticalStackLayout Padding="0,10" Spacing="5">
+                    <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
+
+                    <Frame
+                        Padding="10"
+                        BorderColor="LightGray"
+                        IsVisible="{Binding IsFileSelected}">
+                        <HorizontalStackLayout Spacing="10">
+                            <Label
+                                FontAttributes="Italic"
+                                Text="{Binding FileName}"
+                                VerticalOptions="Center" />
+                            <Button Command="{Binding OpenFileCommand}" Text="Mở File" />
+                            <Button
+                                BackgroundColor="Transparent"
+                                Command="{Binding ClearFileCommand}"
+                                Text="Xóa"
+                                TextColor="Red" />
+                        </HorizontalStackLayout>
+                    </Frame>
+
+                    <Button
+                        Command="{Binding PickPdfCommand}"
+                        HorizontalOptions="Start"
+                        IsVisible="{Binding IsFileSelected, Converter={StaticResource InvertedBoolConverter}}"
+                        Text="Chọn PDF" />
+                </VerticalStackLayout>
+            </DataTemplate>
             <local:AttributeTemplateSelector
                 x:Key="AttributeSelector"
+                ImageTemplate="{StaticResource ImageTemplate}"
                 NumberTemplate="{StaticResource NumberTemplate}"
+                PdfTemplate="{StaticResource PdfTemplate}"
                 TextAreaTemplate="{StaticResource TextAreaTemplate}"
                 TextTemplate="{StaticResource TextTemplate}" />
         </ResourceDictionary>

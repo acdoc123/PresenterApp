@@ -34,7 +34,7 @@ namespace PresenterApp.ViewModels
 
             if (value != null && !string.IsNullOrWhiteSpace(value.Value))
             {
-                SummaryText = $"{firstAttribute.Name}: {value.Value}";
+                SummaryText = $"{value.Value}";
             }
             else
             {

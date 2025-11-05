@@ -9,7 +9,8 @@ namespace PresenterApp.Views
         public DataTemplate TextTemplate { get; set; }
         public DataTemplate TextAreaTemplate { get; set; }
         public DataTemplate NumberTemplate { get; set; }
-        // Các template khác cho Image, Pdf... có thể được thêm vào sau
+        public DataTemplate ImageTemplate { get; set; }
+        public DataTemplate PdfTemplate { get; set; }
 
         protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
         {
@@ -21,6 +22,10 @@ namespace PresenterApp.Views
                     return TextAreaTemplate;
                 case FieldType.Number:
                     return NumberTemplate;
+                case FieldType.Image:
+                    return ImageTemplate;
+                case FieldType.Pdf:
+                    return PdfTemplate;
                 case FieldType.Text:
                 default:
                     return TextTemplate;

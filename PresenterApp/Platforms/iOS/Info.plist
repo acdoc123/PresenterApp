@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ứng dụng này cần truy cập thư viện ảnh của bạn để chọn ảnh cho các mục nội dung.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Ứng dụng này cần truy cập thư viện ảnh của bạn để lưu ảnh.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIDeviceFamily</key>
