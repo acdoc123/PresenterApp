@@ -16,7 +16,6 @@ namespace PresenterApp.ViewModels
         private readonly DataAccessService _dataAccess;
 
         // --- Danh sách Master cho các bộ lọc ---
-        private List<BookType> _allBookTypes = new();
         private List<Book> _allBooks = new();
         private List<AttributeDefinition> _allAttributes = new();
 
@@ -42,6 +41,11 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         string searchText = string.Empty;
 
+        // --- THÊM MỚI: Thuộc tính cho CheckBox ---
+        [ObservableProperty]
+        bool isExactSearch = false; // Mặc định là tìm kiếm KHÔNG chính xác (fuzzy)
+        // --- KẾT THÚC THÊM MỚI ---
+
         // --- Kết quả ---
         [ObservableProperty]
         ObservableCollection<BookSummaryViewModel> searchResults = new();
@@ -63,16 +67,13 @@ namespace PresenterApp.ViewModels
             IsBusy = true;
             try
             {
-                // Tải tất cả Loại Sách
-                _allBookTypes = await _dataAccess.GetBookTypesAsync();
-                FilterBookTypes.Clear();
-                FilterBookTypes.Add(new BookType { Id = 0, Name = "Tất cả Loại Sách" }); // Thêm mục "Tất cả"
-                foreach (var bt in _allBookTypes) FilterBookTypes.Add(bt);
+                var bookTypes = await _dataAccess.GetBookTypesAsync();
+                filterBookTypes.Clear();
+                filterBookTypes.Add(new BookType { Id = 0, Name = "Tất cả Loại Sách" }); // Thêm mục "Tất cả"
+                foreach (var bt in bookTypes) filterBookTypes.Add(bt);
 
-                // Tải tất cả Sách
-                _allBooks = await _dataAccess.GetBooksAsync();
+                _allBooks = (await _dataAccess.GetBooksAsync()).ToList();
 
-                // Tải tất cả Thuộc tính (chỉ để tham khảo, sẽ lọc sau)
                 _allAttributes.Clear();
                 foreach (var book in _allBooks)
                 {
@@ -130,22 +131,34 @@ namespace PresenterApp.ViewModels
                 }
                 else // Hiển thị thuộc tính của "Loại Sách" đã chọn
                 {
-                    attributesToShow = _allAttributes.Where(ad => ad.BookTypeId == SelectedBookType.Id).ToList();
+                    // Lấy ID của tất cả các sách thuộc loại này
+                    var bookIdsInType = _allBooks.Where(b => b.BookTypeId == SelectedBookType.Id).Select(b => b.Id);
+                    attributesToShow = _allAttributes.Where(ad =>
+                        (ad.BookTypeId.HasValue && ad.BookTypeId.Value == SelectedBookType.Id) ||
+                        (ad.BookId.HasValue && bookIdsInType.Contains(ad.BookId.Value))
+                    ).ToList();
                 }
             }
             else // Một sách cụ thể đã được chọn
             {
                 // Lấy thuộc tính của Sách đó (chung + riêng)
-                // (Sử dụng danh sách đã tải trước để tăng tốc)
-                var commonIds = _allAttributes
-                    .Where(ad => ad.BookTypeId == value.BookTypeId)
-                    .Select(ad => ad.Id);
-                var privateIds = _allAttributes
-                    .Where(ad => ad.BookId == value.Id)
-                    .Select(ad => ad.Id);
+                var book = _allBooks.FirstOrDefault(b => b.Id == value.Id);
+                if (book != null)
+                {
+                    var commonIds = _allAttributes
+                        .Where(ad => ad.BookTypeId == book.BookTypeId)
+                        .Select(ad => ad.Id);
+                    var privateIds = _allAttributes
+                        .Where(ad => ad.BookId == book.Id)
+                        .Select(ad => ad.Id);
 
-                var allIds = commonIds.Concat(privateIds).ToHashSet();
-                attributesToShow = _allAttributes.Where(ad => allIds.Contains(ad.Id)).ToList();
+                    var allIds = commonIds.Concat(privateIds).ToHashSet();
+                    attributesToShow = _allAttributes.Where(ad => allIds.Contains(ad.Id)).ToList();
+                }
+                else
+                {
+                    attributesToShow = new List<AttributeDefinition>();
+                }
             }
 
             foreach (var attr in attributesToShow.GroupBy(ad => ad.Name).Select(g => g.First()))
@@ -155,7 +168,7 @@ namespace PresenterApp.ViewModels
             SelectedAttribute = FilterAttributes.FirstOrDefault(); // Đặt lại về "Tất cả Thuộc tính"
         }
 
-        // Lệnh được gọi bởi SearchBar hoặc nút
+        // Lệnh được gọi bởi SearchBar
         [RelayCommand]
         async Task ExecuteSearchAsync()
         {
@@ -169,28 +182,28 @@ namespace PresenterApp.ViewModels
                 int? bookId = (SelectedBook?.Id == 0) ? null : SelectedBook?.Id;
                 int? attributeId = (SelectedAttribute?.Id == 0) ? null : SelectedAttribute?.Id;
 
-                // 1. Tìm kiếm trong DB
-                var matchingEntries = await _dataAccess.SearchContentEntriesAsync(SearchText, bookTypeId, bookId, attributeId);
+                // --- Truyền IsExactSearch vào service ---
+                var matchingEntries = await _dataAccess.SearchContentEntriesAsync(SearchText, IsExactSearch, bookTypeId, bookId, attributeId);
 
                 // 2. Nhóm kết quả theo Sách
                 var entriesByBook = matchingEntries.GroupBy(entry => entry.BookId);
-
                 SearchResults.Clear();
 
                 // Lấy các thuộc tính để hiển thị tóm tắt
-                var allAttributesMap = (await _dataAccess.GetBooksAsync())
-                    .ToDictionary(b => b.Id, b => _dataAccess.GetAllAttributesForBookAsync(b.Id));
+                // Tạo một Dictionary các Sách để tra cứu nhanh
+                var bookDictionary = _allBooks.ToDictionary(b => b.Id, b => b);
 
                 foreach (var group in entriesByBook)
                 {
-                    var book = _allBooks.FirstOrDefault(b => b.Id == group.Key);
-                    if (book == null) continue;
+                    // Lấy sách từ Dictionary
+                    if (!bookDictionary.TryGetValue(group.Key, out var book)) continue;
 
                     var bookSummaryVM = new BookSummaryViewModel(book);
 
-                    // Lấy định nghĩa thuộc tính cho sách này
-                    if (!allAttributesMap.ContainsKey(book.Id)) continue;
-                    var attributesForThisBook = await allAttributesMap[book.Id];
+                    // Lấy định nghĩa thuộc tính cho sách này (đã được cache)
+                    var commonAttrs = _allAttributes.Where(ad => ad.BookTypeId == book.BookTypeId);
+                    var privateAttrs = _allAttributes.Where(ad => ad.BookId == book.Id);
+                    var attributesForThisBook = commonAttrs.Concat(privateAttrs).ToList();
 
                     // 3. Tải ContentEntryViewModel với tóm tắt
                     var loadTasks = new List<Task>();
@@ -221,6 +234,7 @@ namespace PresenterApp.ViewModels
         [RelayCommand]
         async Task GoToManagementAsync()
         {
+            // Nút "Thêm sửa sách"
             await Shell.Current.GoToAsync(nameof(ManagementDashboardPage));
         }
     }

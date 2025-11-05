@@ -19,7 +19,7 @@
             Padding="0"
             Stroke="LightGray"
             StrokeThickness="1">
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
 
                 <Button
                     Grid.Row="0"
@@ -34,47 +34,62 @@
                     FontSize="Title"
                     Text="Lọc và tìm kiếm nội dung" />
 
-                <VerticalStackLayout
+                <Grid
                     Grid.Row="2"
                     Padding="10,5,10,0"
-                    Spacing="5">
+                    ColumnDefinitions="*,*"
+                    ColumnSpacing="5">
                     <Picker
                         Title="Lọc theo Loại Sách"
+                        Grid.Column="0"
                         ItemDisplayBinding="{Binding Name}"
                         ItemsSource="{Binding FilterBookTypes}"
                         SelectedItem="{Binding SelectedBookType}" />
                     <Picker
                         Title="Lọc theo Sách"
+                        Grid.Column="1"
                         ItemDisplayBinding="{Binding Name}"
                         ItemsSource="{Binding FilterBooks}"
                         SelectedItem="{Binding SelectedBook}" />
+                </Grid>
+
+                <Grid
+                    Grid.Row="3"
+                    Padding="10,5,10,0"
+                    ColumnDefinitions="*,Auto"
+                    ColumnSpacing="10">
                     <Picker
                         Title="Lọc theo Thuộc tính"
+                        Grid.Column="0"
                         ItemDisplayBinding="{Binding Name}"
                         ItemsSource="{Binding FilterAttributes}"
                         SelectedItem="{Binding SelectedAttribute}" />
-                </VerticalStackLayout>
+                    <HorizontalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <CheckBox IsChecked="{Binding IsExactSearch}" />
+                        <Label Text="Chính xác" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Grid>
 
                 <SearchBar
-                    Grid.Row="3"
+                    Grid.Row="4"
                     Margin="10,5,10,10"
                     Placeholder="Tìm kiếm trong thuộc tính đã lọc..."
                     SearchCommand="{Binding ExecuteSearchCommand}"
                     Text="{Binding SearchText}" />
 
                 <BoxView
-                    Grid.Row="4"
+                    Grid.Row="5"
                     HeightRequest="1"
                     Color="LightGray" />
 
                 <ActivityIndicator
-                    Grid.Row="5"
+                    Grid.Row="6"
                     HorizontalOptions="Center"
                     IsRunning="{Binding IsBusySearching}"
                     IsVisible="{Binding IsBusySearching}"
                     VerticalOptions="Center" />
 
-                <ScrollView Grid.Row="5" IsVisible="{Binding IsBusySearching, Converter={StaticResource InvertedBoolConverter}}">
+                <ScrollView Grid.Row="6" IsVisible="{Binding IsBusySearching, Converter={StaticResource InvertedBoolConverter}}">
                     <CollectionView ItemsSource="{Binding SearchResults}" SelectionMode="None">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:BookSummaryViewModel">

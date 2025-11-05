@@ -169,54 +169,48 @@ namespace PresenterApp.Services
             await Init();
             return await _database.Table<ContentEntry>().Where(ce => ce.BookId == bookId).ToListAsync();
         }
-        public async Task<List<ContentEntry>> SearchContentEntriesAsync(string searchText, int? bookTypeId, int? bookId, int? attributeId)
+        public async Task<List<ContentEntry>> SearchContentEntriesAsync(string searchText, bool isExactSearch, int? bookTypeId, int? bookId, int? attributeId)
         {
             await Init();
 
-            // Bắt đầu truy vấn
             var query = new StringBuilder("SELECT DISTINCT T1.* FROM ContentEntry AS T1");
             var args = new List<object>();
 
-            // Luôn cần join với Sách (Book) để lọc theo BookType
             query.Append(" INNER JOIN Book AS T2 ON T1.BookId = T2.Id");
 
-            // Chỉ join Bảng Giá trị (AttributeValue) nếu cần thiết
-            if (!string.IsNullOrWhiteSpace(searchText) || attributeId.HasValue)
+            // Chỉ join Bảng Giá trị (AttributeValue) nếu *bắt buộc* (lọc theo ID hoặc tìm kiếm chính xác)
+            if (attributeId.HasValue || (isExactSearch && !string.IsNullOrWhiteSpace(searchText)))
             {
                 query.Append(" INNER JOIN AttributeValue AS T3 ON T1.Id = T3.ContentEntryId");
             }
 
             var whereClauses = new List<string>();
 
-            // Lọc theo BookType
             if (bookTypeId.HasValue)
             {
                 whereClauses.Add("T2.BookTypeId = ?");
                 args.Add(bookTypeId.Value);
             }
 
-            // Lọc theo Sách (BookId)
             if (bookId.HasValue)
             {
                 whereClauses.Add("T1.BookId = ?");
                 args.Add(bookId.Value);
             }
 
-            // Lọc theo Thuộc tính cụ thể
             if (attributeId.HasValue)
             {
                 whereClauses.Add("T3.AttributeDefinitionId = ?");
                 args.Add(attributeId.Value);
             }
 
-            // Lọc theo văn bản tìm kiếm (trong AttributeValue)
-            if (!string.IsNullOrWhiteSpace(searchText))
+            // 1. TÌM KIẾM CHÍNH XÁC: Dùng SQL LIKE
+            if (isExactSearch && !string.IsNullOrWhiteSpace(searchText))
             {
                 whereClauses.Add("T3.Value LIKE ?");
                 args.Add($"%{searchText}%");
             }
 
-            // Gắn các mệnh đề WHERE
             if (whereClauses.Any())
             {
                 query.Append(" WHERE " + string.Join(" AND ", whereClauses));
@@ -224,7 +218,40 @@ namespace PresenterApp.Services
 
             query.Append(" ORDER BY T1.DateAdded DESC");
 
-            return await _database.QueryAsync<ContentEntry>(query.ToString(), args.ToArray());
+            // Lấy danh sách ứng viên từ DB
+            var candidateEntries = await _database.QueryAsync<ContentEntry>(query.ToString(), args.ToArray());
+
+            // 2. TÌM KIẾM KHÔNG CHÍNH XÁC (FUZZY): Lọc thêm bằng C#
+            if (!isExactSearch && !string.IsNullOrWhiteSpace(searchText))
+            {
+                var normalizedSearchText = SearchHelper.NormalizeString(searchText);
+                var finalResults = new List<ContentEntry>();
+
+                foreach (var entry in candidateEntries)
+                {
+                    // Lấy tất cả giá trị thuộc tính của mục nội dung này
+                    var values = await GetAttributeValuesAsync(entry.Id);
+
+                    // Nếu lọc theo thuộc tính cụ thể, chỉ tìm trong thuộc tính đó
+                    if (attributeId.HasValue)
+                    {
+                        values = values.Where(v => v.AttributeDefinitionId == attributeId.Value).ToList();
+                    }
+
+                    foreach (var value in values)
+                    {
+                        var normalizedValue = SearchHelper.NormalizeString(value.Value);
+                        if (normalizedValue.Contains(normalizedSearchText))
+                        {
+                            finalResults.Add(entry);
+                            break; // Đã tìm thấy, chuyển sang entry tiếp theo
+                        }
+                    }
+                }
+                return finalResults; // Trả về danh sách đã lọc bằng C#
+            }
+
+            return candidateEntries; // Trả về danh sách lọc bằng SQL (tìm kiếm chính xác hoặc không tìm kiếm)
         }
         public async Task<int> SaveContentEntryAsync(ContentEntry entry)
         {

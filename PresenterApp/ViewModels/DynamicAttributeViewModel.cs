@@ -1,7 +1,6 @@
 ﻿// File: ViewModels/DynamicAttributeViewModel.cs
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DocumentFormat.OpenXml;
 using PresenterApp.Models;
 using System.Diagnostics;
 using System.IO;
@@ -16,10 +15,27 @@ namespace PresenterApp.ViewModels
         public string DisplayName => Definition.Name;
         public FieldType FieldType => Definition.Type;
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(FileName))]     // Cập nhật FileName khi StringValue thay đổi
-        [NotifyPropertyChangedFor(nameof(IsFileSelected))] // Cập nhật IsFileSelected khi StringValue thay đổi
-        string stringValue;
+
+        // 1. Đây là trường private lưu trữ giá trị
+        private string stringValue;
+
+        // 2. Đây là thuộc tính đầy đủ mà UI liên kết (bind) tới
+        [NotifyPropertyChangedFor(nameof(FileName))]
+        [NotifyPropertyChangedFor(nameof(IsFileSelected))]
+        public string StringValue
+        {
+            get => stringValue;
+            set
+            {
+                // 3. Sử dụng SetProperty để thông báo cho UI biết giá trị đã thay đổi
+                if (SetProperty(ref stringValue, value))
+                {
+                    // Cập nhật giá trị của Model (Value.Value) ngay khi
+                    // UI (Entry, Editor...) cập nhật thuộc tính này.
+                    Value.Value = value;
+                }
+            }
+        }
 
         // Thuộc tính để hiển thị tên file (cho PDF)
         public string FileName => Path.GetFileName(StringValue);
@@ -31,7 +47,8 @@ namespace PresenterApp.ViewModels
         {
             Definition = definition;
             Value = value;
-            StringValue = value.Value; // Khởi tạo giá trị ban đầu
+            // Khởi tạo giá trị ban đầu cho trường private
+            stringValue = value.Value;
         }
 
         // Lệnh chọn ảnh
@@ -45,8 +62,8 @@ namespace PresenterApp.ViewModels
 
                 // Sao chép file vào thư mục dữ liệu ứng dụng
                 var localPath = await CopyFileToAppData(photo);
-                StringValue = localPath; // Cập nhật UI
-                Value.Value = localPath; // Cập nhật Model
+                // Cập nhật thuộc tính public (sẽ kích hoạt logic 'set' ở trên)
+                StringValue = localPath;
             }
             catch (Exception ex)
             {
@@ -73,8 +90,8 @@ namespace PresenterApp.ViewModels
 
                 // Sao chép file
                 var localPath = await CopyFileToAppData(file);
-                StringValue = localPath; // Cập nhật UI
-                Value.Value = localPath; // Cập nhật Model
+                // Cập nhật thuộc tính public
+                StringValue = localPath;
             }
             catch (Exception ex)
             {
@@ -101,11 +118,8 @@ namespace PresenterApp.ViewModels
         [RelayCommand]
         void ClearFile()
         {
-            // TODO: (Nâng cao) Bạn có thể muốn xóa file vật lý khỏi AppData tại đây
-            // File.Delete(StringValue);
-
+            // Cập nhật thuộc tính public
             StringValue = string.Empty;
-            Value.Value = string.Empty;
         }
 
         // Hàm tiện ích sao chép file vào thư mục AppData
