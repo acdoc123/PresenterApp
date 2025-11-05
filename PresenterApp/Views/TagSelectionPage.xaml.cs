@@ -3,12 +3,21 @@ using PresenterApp.ViewModels;
 
 namespace PresenterApp.Views;
 
-[QueryProperty(nameof(BookId), "BookId")]
+// --- CẬP NHẬT QueryProperty ---
+[QueryProperty(nameof(Target), "Target")]
+[QueryProperty(nameof(TargetId), "TargetId")]
 public partial class TagSelectionPage : ContentPage
 {
-    public int BookId
+    // Target: "Book", "Entry", hoặc "Filter"
+    public string Target
     {
-        set => _viewModel.Initialize(value);
+        set => _viewModel.Target = value;
+    }
+
+    // ID của Book hoặc Entry (hoặc 0 nếu là Filter)
+    public int TargetId
+    {
+        set => _viewModel.TargetId = value;
     }
 
     private readonly TagSelectionViewModel _viewModel;

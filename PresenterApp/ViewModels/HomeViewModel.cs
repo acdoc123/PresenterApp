@@ -14,6 +14,7 @@ namespace PresenterApp.ViewModels
     public partial class HomeViewModel : BaseViewModel
     {
         private readonly DataAccessService _dataAccess;
+        private readonly FilterStateService _filterStateService;
 
         // --- Danh sách Master cho các bộ lọc ---
         private List<Book> _allBooks = new();
@@ -41,10 +42,10 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         string searchText = string.Empty;
 
-        // --- THÊM MỚI: Thuộc tính cho CheckBox ---
         [ObservableProperty]
         bool isExactSearch = false; // Mặc định là tìm kiếm KHÔNG chính xác (fuzzy)
-        // --- KẾT THÚC THÊM MỚI ---
+        [ObservableProperty]
+        ObservableCollection<Tag> filterTags = new();
 
         // --- Kết quả ---
         [ObservableProperty]
@@ -53,10 +54,24 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         bool isBusySearching;
 
-        public HomeViewModel(DataAccessService dataAccess)
+        public HomeViewModel(DataAccessService dataAccess, FilterStateService filterStateService)
         {
             _dataAccess = dataAccess;
+            _filterStateService = filterStateService;
             Title = "Trang chủ";
+        }
+        [RelayCommand]
+        async Task OpenTagFilterAsync()
+        {
+            // Tải các tag đã chọn hiện tại vào dịch vụ
+            _filterStateService.SelectedFilterTags = FilterTags.ToList();
+
+            // Mở trang chọn Tag với bối cảnh "Filter"
+            await Shell.Current.GoToAsync(nameof(TagSelectionPage), true, new Dictionary<string, object>
+            {
+                { "Target", "Filter" },
+                { "TargetId", 0 } // Không cần ID
+            });
         }
 
         // Tải dữ liệu cho các bộ lọc
@@ -79,6 +94,11 @@ namespace PresenterApp.ViewModels
                 {
                     var attrs = await _dataAccess.GetAllAttributesForBookAsync(book.Id);
                     _allAttributes.AddRange(attrs);
+                }
+                FilterTags.Clear();
+                foreach (var tag in _filterStateService.SelectedFilterTags)
+                {
+                    FilterTags.Add(tag);
                 }
                 // Loại bỏ các thuộc tính trùng tên
                 _allAttributes = _allAttributes.GroupBy(ad => ad.Name).Select(g => g.First()).ToList();
@@ -182,8 +202,9 @@ namespace PresenterApp.ViewModels
                 int? bookId = (SelectedBook?.Id == 0) ? null : SelectedBook?.Id;
                 int? attributeId = (SelectedAttribute?.Id == 0) ? null : SelectedAttribute?.Id;
 
+                List<int> tagIds = FilterTags.Select(t => t.Id).ToList();
                 // --- Truyền IsExactSearch vào service ---
-                var matchingEntries = await _dataAccess.SearchContentEntriesAsync(SearchText, IsExactSearch, bookTypeId, bookId, attributeId);
+                var matchingEntries = await _dataAccess.SearchContentEntriesAsync(SearchText, IsExactSearch, bookTypeId, bookId, attributeId, tagIds);
 
                 // 2. Nhóm kết quả theo Sách
                 var entriesByBook = matchingEntries.GroupBy(entry => entry.BookId);

@@ -12,7 +12,15 @@ namespace PresenterApp.ViewModels
     public partial class TagSelectionViewModel : BaseViewModel
     {
         private readonly DataAccessService _dataAccess;
-        private int _bookId;
+        // --- Dịch vụ trạng thái bộ lọc ---
+        private readonly FilterStateService _filterStateService;
+
+        // --- Thuộc tính cho QueryProperty ---
+        [ObservableProperty]
+        string target; // "Book", "Entry", hoặc "Filter"
+
+        [ObservableProperty]
+        int targetId; // BookId, EntryId, hoặc 0
 
         [ObservableProperty]
         ObservableCollection<SelectableTag> allTags = new();
@@ -20,15 +28,13 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         string newTagName;
 
-        public TagSelectionViewModel(DataAccessService dataAccess)
+        public TagSelectionViewModel(DataAccessService dataAccess, FilterStateService filterStateService) // Inject dịch vụ mới
         {
             _dataAccess = dataAccess;
+            _filterStateService = filterStateService; // Gán dịch vụ
         }
 
-        public void Initialize(int bookId)
-        {
-            _bookId = bookId;
-        }
+        // CẬP NHẬT: Phương thức Initialize bị loại bỏ vì đã dùng QueryProperty
 
         [RelayCommand]
         async Task LoadTagsAsync()
@@ -39,10 +45,22 @@ namespace PresenterApp.ViewModels
             {
                 var allTagsFromDb = await _dataAccess.GetTagsAsync();
                 var selectedTagIds = new HashSet<int>();
-                if (_bookId != 0)
+
+                // --- Tải các tag đã chọn dựa trên bối cảnh ---
+                if (Target == "Book")
                 {
-                    var selectedBookTags = await _dataAccess.GetTagsForBookAsync(_bookId);
+                    var selectedBookTags = await _dataAccess.GetTagsForBookAsync(TargetId);
                     selectedTagIds = selectedBookTags.Select(t => t.TagId).ToHashSet();
+                }
+                else if (Target == "Entry")
+                {
+                    var selectedEntryTags = await _dataAccess.GetTagsForContentEntryAsync(TargetId);
+                    selectedTagIds = selectedEntryTags.Select(t => t.TagId).ToHashSet();
+                }
+                else if (Target == "Filter")
+                {
+                    // Lấy các tag đã chọn từ dịch vụ trạng thái
+                    selectedTagIds = _filterStateService.SelectedFilterTags.Select(t => t.Id).ToHashSet();
                 }
 
                 AllTags.Clear();
@@ -69,7 +87,6 @@ namespace PresenterApp.ViewModels
             var newTag = new Tag { Name = NewTagName };
             await _dataAccess.SaveTagAsync(newTag);
 
-            // Thêm vào danh sách và tự động chọn
             var selectableTag = new SelectableTag { Tag = newTag, IsSelected = true };
             AllTags.Add(selectableTag);
 
@@ -81,7 +98,6 @@ namespace PresenterApp.ViewModels
         {
             if (tagToDelete == null) return;
 
-            // THÊM MỚI: Yêu cầu xác nhận
             bool confirm = await Shell.Current.DisplayAlert("Xác nhận Xóa", $"Bạn có chắc muốn xóa vĩnh viễn tag '{tagToDelete.Tag.Name}'? Thao tác này sẽ xóa tag khỏi tất cả các sách.", "Có", "Không");
             if (!confirm) return;
 
@@ -94,11 +110,23 @@ namespace PresenterApp.ViewModels
         {
             try
             {
-                // Lưu các tag đã chọn vào DB
                 var tagsToSave = AllTags.Where(t => t.IsSelected).Select(t => t.Tag).ToList();
-                await _dataAccess.SetTagsForBookAsync(_bookId, tagsToSave);
 
-                // Quay lại trang trước
+                // --- Lưu vào đúng nơi dựa trên bối cảnh ---
+                if (Target == "Book")
+                {
+                    await _dataAccess.SetTagsForBookAsync(TargetId, tagsToSave);
+                }
+                else if (Target == "Entry")
+                {
+                    await _dataAccess.SetTagsForContentEntryAsync(TargetId, tagsToSave);
+                }
+                else if (Target == "Filter")
+                {
+                    // Lưu trạng thái bộ lọc vào dịch vụ
+                    _filterStateService.SelectedFilterTags = tagsToSave;
+                }
+
                 await Shell.Current.GoToAsync("..");
             }
             catch (Exception ex)

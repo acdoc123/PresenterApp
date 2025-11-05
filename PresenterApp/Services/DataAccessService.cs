@@ -21,7 +21,7 @@ namespace PresenterApp.Services
             if (_database is not null)
                 return;
 
-            var databasePath = Path.Combine(FileSystem.AppDataDirectory, "Library.db3"); // Đổi tên DB
+            var databasePath = Path.Combine(FileSystem.AppDataDirectory, "Library.db3");
             _database = new SQLiteAsyncConnection(databasePath);
 
             // Tạo các bảng mới
@@ -32,6 +32,7 @@ namespace PresenterApp.Services
             await _database.CreateTableAsync<AttributeDefinition>();
             await _database.CreateTableAsync<ContentEntry>();
             await _database.CreateTableAsync<AttributeValue>();
+            await _database.CreateTableAsync<ContentEntryTag>();
         }
 
         // --- BookType Methods ---
@@ -124,7 +125,20 @@ namespace PresenterApp.Services
             var newBookTags = tags.Select(t => new BookTag { BookId = bookId, TagId = t.Id });
             await _database.InsertAllAsync(newBookTags);
         }
-
+        public async Task<List<ContentEntryTag>> GetTagsForContentEntryAsync(int contentEntryId)
+        {
+            await Init();
+            return await _database.Table<ContentEntryTag>().Where(cet => cet.ContentEntryId == contentEntryId).ToListAsync();
+        }
+        public async Task SetTagsForContentEntryAsync(int contentEntryId, List<Tag> tags)
+        {
+            await Init();
+            // Xóa các tag cũ
+            await _database.Table<ContentEntryTag>().DeleteAsync(cet => cet.ContentEntryId == contentEntryId);
+            // Thêm tag mới
+            var newContentEntryTags = tags.Select(t => new ContentEntryTag { ContentEntryId = contentEntryId, TagId = t.Id });
+            await _database.InsertAllAsync(newContentEntryTags);
+        }
 
         // --- AttributeDefinition Methods ---
         public async Task<List<AttributeDefinition>> GetAttributesForBookTypeAsync(int bookTypeId)
@@ -169,7 +183,8 @@ namespace PresenterApp.Services
             await Init();
             return await _database.Table<ContentEntry>().Where(ce => ce.BookId == bookId).ToListAsync();
         }
-        public async Task<List<ContentEntry>> SearchContentEntriesAsync(string searchText, bool isExactSearch, int? bookTypeId, int? bookId, int? attributeId)
+        public async Task<List<ContentEntry>> SearchContentEntriesAsync(string searchText, bool isExactSearch,
+            int? bookTypeId, int? bookId, int? attributeId, List<int> tagIds)
         {
             await Init();
 
@@ -177,6 +192,11 @@ namespace PresenterApp.Services
             var args = new List<object>();
 
             query.Append(" INNER JOIN Book AS T2 ON T1.BookId = T2.Id");
+            // Join với ContentEntryTag nếu cần lọc theo Tag
+            if (tagIds != null && tagIds.Any())
+            {
+                query.Append(" INNER JOIN ContentEntryTags AS T4 ON T1.Id = T4.ContentEntryId");
+            }
 
             // Chỉ join Bảng Giá trị (AttributeValue) nếu *bắt buộc* (lọc theo ID hoặc tìm kiếm chính xác)
             if (attributeId.HasValue || (isExactSearch && !string.IsNullOrWhiteSpace(searchText)))
@@ -209,6 +229,14 @@ namespace PresenterApp.Services
             {
                 whereClauses.Add("T3.Value LIKE ?");
                 args.Add($"%{searchText}%");
+            }
+            // --- Lọc theo Tag (khớp BẤT KỲ tag nào) ---
+            if (tagIds != null && tagIds.Any())
+            {
+                // Tạo danh sách tham số (?, ?, ?)
+                var tagParams = string.Join(",", Enumerable.Repeat("?", tagIds.Count));
+                whereClauses.Add($"T4.TagId IN ({tagParams})");
+                args.AddRange(tagIds.Cast<object>());
             }
 
             if (whereClauses.Any())

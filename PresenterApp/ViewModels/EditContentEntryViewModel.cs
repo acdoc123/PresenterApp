@@ -23,6 +23,9 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         ObservableCollection<DynamicAttributeViewModel> dynamicAttributes = new();
 
+        [ObservableProperty]
+        ObservableCollection<Tag> selectedTags = new();
+
         public EditContentEntryViewModel(DataAccessService dataAccess)
         {
             _dataAccess = dataAccess;
@@ -37,6 +40,7 @@ namespace PresenterApp.ViewModels
             {
                 LoadAttributesAndValuesCommand.Execute(null);
             }
+            LoadTagsCommand.Execute(null);
         }
 
         partial void OnBookChanged(Book value)
@@ -45,6 +49,23 @@ namespace PresenterApp.ViewModels
             if (CurrentEntry != null)
             {
                 LoadAttributesAndValuesCommand.Execute(null);
+            }
+        }
+        [RelayCommand]
+        async Task LoadTagsAsync()
+        {
+            if (CurrentEntry.Id == 0) return; // Chỉ tải nếu Entry đã tồn tại
+
+            SelectedTags.Clear();
+            var tagRelations = await _dataAccess.GetTagsForContentEntryAsync(CurrentEntry.Id);
+            if (tagRelations.Any())
+            {
+                var allTags = await _dataAccess.GetTagsAsync();
+                var selectedTagIds = tagRelations.Select(t => t.TagId).ToHashSet();
+                foreach (var tag in allTags.Where(t => selectedTagIds.Contains(t.Id)))
+                {
+                    SelectedTags.Add(tag);
+                }
             }
         }
 
@@ -118,9 +139,12 @@ namespace PresenterApp.ViewModels
                     attrVM.Value.ContentEntryId = CurrentEntry.Id;
                     await _dataAccess.SaveAttributeValueAsync(attrVM.Value);
                 }
-
+                // --- Cần lưu cả Tags (dù logic này nằm trong TagSelectionPage) ---
+                Title = "Sửa Nội dung"; // Cập nhật tiêu đề
+                OnPropertyChanged(nameof(CurrentEntry)); // Kích hoạt IsVisible
                 await Shell.Current.DisplayAlert("Thành công", "Đã lưu nội dung", "OK");
-                await Shell.Current.GoToAsync("..");
+                // Không tự động quay lại, để người dùng có thể thêm/sửa Tag
+                // await Shell.Current.GoToAsync("..");
             }
             catch (Exception ex)
             {
@@ -131,6 +155,23 @@ namespace PresenterApp.ViewModels
             {
                 IsBusy = false;
             }
+        }
+
+        [RelayCommand]
+        async Task OpenTagSelectionModalAsync()
+        {
+            if (CurrentEntry.Id == 0)
+            {
+                await Shell.Current.DisplayAlert("Lỗi", "Vui lòng lưu nội dung trước khi thêm tag.", "OK");
+                return;
+            }
+
+            // Điều hướng đến trang chọn Tag với bối cảnh là "Entry"
+            await Shell.Current.GoToAsync("TagSelectionPage", true, new Dictionary<string, object>
+            {
+                { "Target", "Entry" },
+                { "TargetId", CurrentEntry.Id }
+            });
         }
     }
 }

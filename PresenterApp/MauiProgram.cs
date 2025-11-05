@@ -26,6 +26,7 @@ namespace PresenterApp
 #endif
             // Đăng ký Service
             builder.Services.AddSingleton<DataAccessService>();
+            builder.Services.AddSingleton<FilterStateService>();
 
             // Đăng ký Views và ViewModels
             // Trang chính (gốc)

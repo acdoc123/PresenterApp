@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:PresenterApp.Views"
+    xmlns:model="clr-namespace:PresenterApp.Models"
     xmlns:vm="clr-namespace:PresenterApp.ViewModels"
     Title="{Binding Title}"
     x:DataType="vm:EditContentEntryViewModel">
@@ -106,11 +107,57 @@
 
     <Grid RowDefinitions="*,Auto">
         <ScrollView Grid.Row="0">
-            <VerticalStackLayout
-                Padding="20"
-                BindableLayout.ItemTemplateSelector="{StaticResource AttributeSelector}"
-                BindableLayout.ItemsSource="{Binding DynamicAttributes}"
-                Spacing="5" />
+            <VerticalStackLayout Padding="20" Spacing="5">
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="Medium"
+                    Text="Thuộc tính Nội dung" />
+                <VerticalStackLayout BindableLayout.ItemTemplateSelector="{StaticResource AttributeSelector}" BindableLayout.ItemsSource="{Binding DynamicAttributes}" />
+
+                <BoxView
+                    Margin="0,15"
+                    HeightRequest="1"
+                    Color="LightGray" />
+
+                <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                    <Label
+                        Grid.Column="0"
+                        FontAttributes="Bold"
+                        FontSize="Medium"
+                        Text="Tags cho Nội dung này"
+                        VerticalOptions="Center" />
+                    <Button
+                        Grid.Column="1"
+                        Command="{Binding OpenTagSelectionModalCommand}"
+                        IsEnabled="{Binding CurrentEntry.Id, Converter={StaticResource IntToBoolConverter}}"
+                        Text="Quản lý Tags (+)" />
+                </Grid>
+                <Label
+                    FontAttributes="Italic"
+                    IsVisible="{Binding CurrentEntry.Id, Converter={StaticResource IntToBoolConverter}, ConverterParameter=invert}"
+                    Text="Lưu nội dung trước khi thêm tag"
+                    TextColor="Gray" />
+
+                <CollectionView
+                    Margin="0,5,0,0"
+                    ItemsSource="{Binding SelectedTags}"
+                    SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical" Span="3" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="model:Tag">
+                            <Frame
+                                Margin="0,0,5,5"
+                                Padding="8,5"
+                                BorderColor="Gray"
+                                CornerRadius="8">
+                                <Label Text="{Binding Name}" VerticalOptions="Center" />
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
         </ScrollView>
 
         <Button

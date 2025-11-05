@@ -19,7 +19,7 @@
             Padding="0"
             Stroke="LightGray"
             StrokeThickness="1">
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*">
 
                 <Button
                     Grid.Row="0"
@@ -70,26 +70,59 @@
                     </HorizontalStackLayout>
                 </Grid>
 
-                <SearchBar
+                <Grid
                     Grid.Row="4"
+                    Padding="10,5,10,0"
+                    ColumnDefinitions="*,Auto">
+                    <Frame
+                        Grid.Column="0"
+                        Padding="5"
+                        BorderColor="LightGray"
+                        CornerRadius="5"
+                        HeightRequest="50">
+                        <ScrollView Orientation="Horizontal">
+                            <HorizontalStackLayout BindableLayout.ItemsSource="{Binding FilterTags}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="model:Tag">
+                                        <Frame
+                                            Margin="0,0,5,0"
+                                            Padding="8,5"
+                                            BorderColor="Gray"
+                                            CornerRadius="8">
+                                            <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                        </Frame>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </ScrollView>
+                    </Frame>
+                    <Button
+                        Grid.Column="1"
+                        Command="{Binding OpenTagFilterCommand}"
+                        Text="Lọc Tags..."
+                        WidthRequest="110" />
+                </Grid>
+
+                <SearchBar
+                    Grid.Row="5"
                     Margin="10,5,10,10"
                     Placeholder="Tìm kiếm trong thuộc tính đã lọc..."
                     SearchCommand="{Binding ExecuteSearchCommand}"
                     Text="{Binding SearchText}" />
 
                 <BoxView
-                    Grid.Row="5"
+                    Grid.Row="6"
                     HeightRequest="1"
                     Color="LightGray" />
 
                 <ActivityIndicator
-                    Grid.Row="6"
+                    Grid.Row="7"
                     HorizontalOptions="Center"
                     IsRunning="{Binding IsBusySearching}"
                     IsVisible="{Binding IsBusySearching}"
                     VerticalOptions="Center" />
 
-                <ScrollView Grid.Row="6" IsVisible="{Binding IsBusySearching, Converter={StaticResource InvertedBoolConverter}}">
+                <ScrollView Grid.Row="7" IsVisible="{Binding IsBusySearching, Converter={StaticResource InvertedBoolConverter}}">
                     <CollectionView ItemsSource="{Binding SearchResults}" SelectionMode="None">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:BookSummaryViewModel">
