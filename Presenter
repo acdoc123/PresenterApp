@@ -1,2 +1,0 @@
-App\Views\HomePage.xaml
-<TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:HomeViewModel}}, Path=GoToSongDetailCommand}" CommandParameter="{Binding}" />
