@@ -55,6 +55,12 @@ namespace PresenterApp
 
             // BookSummaryViewModel được tạo động, không cần đăng ký DI
 
+            builder.Services.AddTransient<EditThemePage>();
+            builder.Services.AddTransient<EditThemeViewModel>();
+
+            builder.Services.AddTransient<EditStructurePage>();
+            builder.Services.AddTransient<EditStructureViewModel>();
+
             return builder.Build();
         }
     }

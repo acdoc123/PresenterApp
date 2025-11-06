@@ -33,6 +33,10 @@ namespace PresenterApp.Services
             await _database.CreateTableAsync<ContentEntry>();
             await _database.CreateTableAsync<AttributeValue>();
             await _database.CreateTableAsync<ContentEntryTag>();
+
+            await _database.CreateTableAsync<PresentationTheme>();
+            await _database.CreateTableAsync<PresentationStructure>();
+            await _database.CreateTableAsync<PresentationComponent>();
         }
 
         // --- BookType Methods ---
@@ -329,6 +333,94 @@ namespace PresenterApp.Services
             {
                 await _database.InsertAsync(value);
             }
+        }
+        // --- PresentationTheme Methods ---
+        public async Task<List<PresentationTheme>> GetPresentationThemesAsync()
+        {
+            await Init();
+            return await _database.Table<PresentationTheme>().ToListAsync();
+        }
+
+        public async Task<int> SavePresentationThemeAsync(PresentationTheme theme)
+        {
+            await Init();
+            if (theme.Id != 0)
+                return await _database.UpdateAsync(theme);
+            else
+                return await _database.InsertAsync(theme);
+        }
+
+        public async Task<int> DeletePresentationThemeAsync(PresentationTheme theme)
+        {
+            await Init();
+            return await _database.DeleteAsync(theme);
+        }
+
+        // --- PresentationStructure Methods ---
+        public async Task<List<PresentationStructure>> GetPresentationStructuresAsync()
+        {
+            await Init();
+            return await _database.Table<PresentationStructure>().ToListAsync();
+        }
+
+        public async Task<int> SavePresentationStructureAsync(PresentationStructure structure)
+        {
+            await Init();
+            if (structure.Id != 0)
+                return await _database.UpdateAsync(structure);
+            else
+                return await _database.InsertAsync(structure);
+        }
+
+        public async Task<int> DeletePresentationStructureAsync(PresentationStructure structure)
+        {
+            await Init();
+            // Cũng xóa các thành phần con
+            await _database.Table<PresentationComponent>().DeleteAsync(c => c.StructureId == structure.Id);
+            return await _database.DeleteAsync(structure);
+        }
+
+        // --- PresentationComponent Methods ---
+        public async Task<List<PresentationComponent>> GetComponentsForStructureAsync(int structureId)
+        {
+            await Init();
+            return await _database.Table<PresentationComponent>()
+                                .Where(c => c.StructureId == structureId)
+                                .OrderBy(c => c.DisplayOrder)
+                                .ToListAsync();
+        }
+
+        public async Task<int> SaveComponentAsync(PresentationComponent component)
+        {
+            await Init();
+            if (component.Id != 0)
+                return await _database.UpdateAsync(component);
+            else
+                return await _database.InsertAsync(component);
+        }
+
+        public async Task<int> DeleteComponentAsync(PresentationComponent component)
+        {
+            await Init();
+            return await _database.DeleteAsync(component);
+        }
+
+        // Dùng để lưu lại thứ tự và các thay đổi
+        public async Task SaveComponentsForStructureAsync(int structureId, List<PresentationComponent> components)
+        {
+            await Init();
+            // Xóa tất cả component cũ
+            await _database.Table<PresentationComponent>().DeleteAsync(c => c.StructureId == structureId);
+
+            // Thêm lại với thứ tự mới
+            int order = 0;
+            foreach (var comp in components)
+            {
+                comp.Id = 0; // Đảm bảo tạo mới
+                comp.StructureId = structureId;
+                comp.DisplayOrder = order++;
+            }
+            await _database.InsertAllAsync(components);
         }
     }
 }

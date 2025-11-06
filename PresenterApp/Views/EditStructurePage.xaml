@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.EditStructurePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:model="clr-namespace:PresenterApp.Models"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="{Binding Title}"
+    x:DataType="vm:EditStructureViewModel">
+
+    <Grid RowDefinitions="*,Auto,Auto">
+
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="20" Spacing="10">
+                <Label FontAttributes="Bold" Text="Tên Cấu trúc Trình chiếu" />
+                <Entry Placeholder="Nhập tên cấu trúc..." Text="{Binding CurrentStructure.Name}" />
+
+                <Label
+                    Margin="0,15,0,0"
+                    FontAttributes="Bold"
+                    Text="Danh sách các thành phần (Kéo để sắp xếp)" />
+
+                <CollectionView ItemsSource="{Binding Components}" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PresentationComponentViewModel">
+                            <Frame
+                                Margin="0,5"
+                                Padding="10"
+                                BorderColor="LightGray">
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Grid.GestureRecognizers>
+                                        <DragGestureRecognizer
+                                            CanDrag="True"
+                                            DragStartingCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:EditStructureViewModel}}, Path=ItemDraggedCommand}"
+                                            DragStartingCommandParameter="{Binding .}" />
+                                        <DropGestureRecognizer
+                                            AllowDrop="True"
+                                            DragLeaveCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:EditStructureViewModel}}, Path=ItemDragLeaveCommand}"
+                                            DragLeaveCommandParameter="{Binding .}"
+                                            DragOverCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:EditStructureViewModel}}, Path=ItemDraggedOverCommand}"
+                                            DragOverCommandParameter="{Binding .}"
+                                            DropCommand="{Binding Source={RelativeSource AncestorType={x:Type vm:EditStructureViewModel}}, Path=ItemDroppedCommand}"
+                                            DropCommandParameter="{Binding .}" />
+                                    </Grid.GestureRecognizers>
+
+                                    <Image
+                                        Grid.Column="0"
+                                        HeightRequest="20"
+                                        Source="drag_indicator.svg"
+                                        VerticalOptions="Center"
+                                        WidthRequest="20" />
+
+                                    <Entry
+                                        Grid.Column="1"
+                                        Margin="10,0"
+                                        FontSize="Medium"
+                                        Text="{Binding ComponentName}"
+                                        VerticalOptions="Center" />
+
+                                    <Button
+                                        Grid.Column="2"
+                                        BackgroundColor="Transparent"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditStructureViewModel}}, Path=DeleteComponentCommand}"
+                                        CommandParameter="{Binding .}"
+                                        FontAttributes="Bold"
+                                        Text="x"
+                                        TextColor="Red"
+                                        WidthRequest="40" />
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Grid
+                    Margin="0,10,0,0"
+                    ColumnDefinitions="*,Auto"
+                    ColumnSpacing="10">
+                    <Entry
+                        Grid.Column="0"
+                        Placeholder="Tên thành phần mới..."
+                        Text="{Binding NewComponentName}" />
+                    <Button
+                        Grid.Column="1"
+                        Command="{Binding AddComponentCommand}"
+                        Text="Thêm" />
+                </Grid>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button
+            Grid.Row="1"
+            Margin="20,10"
+            Command="{Binding SaveCommand}"
+            HorizontalOptions="Fill"
+            Text="Lưu Cấu trúc" />
+
+        <Button
+            Grid.Row="2"
+            Margin="20,0,20,10"
+            BackgroundColor="Red"
+            Command="{Binding DeleteCommand}"
+            HorizontalOptions="Fill"
+            IsVisible="{Binding CurrentStructure.Id, Converter={StaticResource IntToBoolConverter}}"
+            Text="Xóa Cấu trúc" />
+    </Grid>
+</ContentPage>

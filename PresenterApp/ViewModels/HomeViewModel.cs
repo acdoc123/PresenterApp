@@ -6,6 +6,7 @@ using PresenterApp.Services;
 using PresenterApp.Views;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Microsoft.Maui.Storage;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -53,6 +54,18 @@ namespace PresenterApp.ViewModels
 
         [ObservableProperty]
         bool isBusySearching;
+
+        [ObservableProperty]
+        ObservableCollection<PresentationTheme> presentationThemes = new();
+
+        [ObservableProperty]
+        PresentationTheme selectedTheme;
+
+        [ObservableProperty]
+        ObservableCollection<PresentationStructure> presentationStructures = new();
+
+        [ObservableProperty]
+        PresentationStructure selectedStructure;
 
         public HomeViewModel(DataAccessService dataAccess, FilterStateService filterStateService)
         {
@@ -103,6 +116,27 @@ namespace PresenterApp.ViewModels
                 }
                 // Loại bỏ các thuộc tính trùng tên
                 _allAttributes = _allAttributes.GroupBy(ad => ad.Name).Select(g => g.First()).ToList();
+                // *** TẢI DỮ LIỆU CHO CỘT 2 ***
+                PresentationThemes.Clear();
+                var themes = await _dataAccess.GetPresentationThemesAsync();
+                var defaultTheme = new PresentationTheme { Id = 0, Name = "Tạo mới..." };
+                PresentationThemes.Add(defaultTheme);
+                foreach (var theme in themes) PresentationThemes.Add(theme);
+
+                // Đọc ID đã lưu
+                var lastThemeId = Preferences.Get("LastThemeId", 0);
+                SelectedTheme = PresentationThemes.FirstOrDefault(t => t.Id == lastThemeId) ?? defaultTheme;
+
+
+                PresentationStructures.Clear();
+                var structures = await _dataAccess.GetPresentationStructuresAsync();
+                var defaultStructure = new PresentationStructure { Id = 0, Name = "Tạo mới..." };
+                PresentationStructures.Add(defaultStructure);
+                foreach (var structure in structures) PresentationStructures.Add(structure);
+
+                // Đọc ID đã lưu
+                var lastStructureId = Preferences.Get("LastStructureId", 0);
+                SelectedStructure = PresentationStructures.FirstOrDefault(s => s.Id == lastStructureId) ?? defaultStructure;
 
                 // Đặt lại các bộ lọc
                 //OnSelectedBookTypeChanged(null);
@@ -189,7 +223,21 @@ namespace PresenterApp.ViewModels
             }
             SelectedAttribute = FilterAttributes.FirstOrDefault(); // Đặt lại về "Tất cả Thuộc tính"
         }
+        partial void OnSelectedThemeChanged(PresentationTheme value)
+        {
+            if (value != null)
+            {
+                Preferences.Set("LastThemeId", value.Id);
+            }
+        }
 
+        partial void OnSelectedStructureChanged(PresentationStructure value)
+        {
+            if (value != null)
+            {
+                Preferences.Set("LastStructureId", value.Id);
+            }
+        }
         // Lệnh được gọi bởi SearchBar
         [RelayCommand]
         async Task ExecuteSearchAsync()
@@ -259,6 +307,44 @@ namespace PresenterApp.ViewModels
         {
             // Nút "Thêm sửa sách"
             await Shell.Current.GoToAsync(nameof(ManagementDashboardPage));
+        }
+        // *** CÁC LỆNH MỚI CHO CỘT 2 ***
+        [RelayCommand]
+        async Task GoToEditThemeAsync()
+        {
+            PresentationTheme themeToSend;
+            if (SelectedTheme == null || SelectedTheme.Id == 0)
+            {
+                themeToSend = new PresentationTheme(); // Tạo mới
+            }
+            else
+            {
+                themeToSend = SelectedTheme; // Sửa cái hiện tại
+            }
+
+            await Shell.Current.GoToAsync(nameof(EditThemePage), true, new Dictionary<string, object>
+            {
+                { "Item", themeToSend }
+            });
+        }
+
+        [RelayCommand]
+        async Task GoToEditStructureAsync()
+        {
+            PresentationStructure structureToSend;
+            if (SelectedStructure == null || SelectedStructure.Id == 0)
+            {
+                structureToSend = new PresentationStructure(); // Tạo mới
+            }
+            else
+            {
+                structureToSend = SelectedStructure; // Sửa
+            }
+
+            await Shell.Current.GoToAsync(nameof(EditStructurePage), true, new Dictionary<string, object>
+            {
+                { "Item", structureToSend }
+            });
         }
     }
 }
