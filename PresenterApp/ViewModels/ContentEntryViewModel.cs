@@ -1,11 +1,15 @@
 ﻿// File: ViewModels/ContentEntryViewModel.cs
+using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using PresenterApp.Models;
 using PresenterApp.Services;
-using System.Text.Json;
-using System.Text;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace PresenterApp.ViewModels
@@ -20,6 +24,18 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         string summaryText2 = "";
 
+        private DataAccessService _dataAccess;
+        private List<AttributeDefinition> _allAttributes;
+
+        [ObservableProperty]
+        bool isExpanded;
+
+        [ObservableProperty]
+        bool isLoadingDetails;
+
+        [ObservableProperty]
+        ObservableCollection<DynamicAttributeViewModel> detailedAttributes = new();
+
         public ContentEntryViewModel(ContentEntry entry)
         {
             Entry = entry;
@@ -27,6 +43,10 @@ namespace PresenterApp.ViewModels
 
         public async Task LoadSummaryAsync(DataAccessService dataAccess, List<AttributeDefinition> allAttributes)
         {
+            // Lưu lại để dùng cho LoadDetailsAsync
+            _dataAccess = dataAccess;
+            _allAttributes = allAttributes;
+
             var firstAttribute = allAttributes.ElementAtOrDefault(0);
             var secondAttribute = allAttributes.ElementAtOrDefault(1);
 
@@ -34,7 +54,7 @@ namespace PresenterApp.ViewModels
             if (firstAttribute != null)
             {
                 var value1 = await dataAccess.GetAttributeValueAsync(Entry.Id, firstAttribute.Id);
-                SummaryText1 = FormatSummary(firstAttribute, value1);
+                SummaryText1 = FormatSummary(firstAttribute, value1, false); // false = tóm tắt
             }
             else
             {
@@ -45,56 +65,108 @@ namespace PresenterApp.ViewModels
             if (secondAttribute != null)
             {
                 var value2 = await dataAccess.GetAttributeValueAsync(Entry.Id, secondAttribute.Id);
-                SummaryText2 = FormatSummary(secondAttribute, value2);
+                SummaryText2 = FormatSummary(secondAttribute, value2, false); // false = tóm tắt
             }
             else
             {
                 SummaryText2 = "";
             }
         }
-
-        /// <summary>
-        /// Hàm trợ giúp mới để định dạng văn bản tóm tắt
-        /// </summary>
-        private string FormatSummary(AttributeDefinition attribute, AttributeValue? value)
+        private string FormatSummary(AttributeDefinition attribute, AttributeValue? value, bool isDetail)
         {
             if (value == null || string.IsNullOrWhiteSpace(value.Value))
             {
-                return $"({attribute.Name} trống)";
+                return $"{attribute.Name}: (trống)";
             }
 
+            // Logic cho FlexibleContent
             if (attribute.Type == FieldType.FlexibleContent)
             {
                 try
                 {
-                    // Giải mã JSON
                     var items = JsonSerializer.Deserialize<List<FlexibleContentBlock>>(value.Value);
-
-                    // Tìm khối văn bản có tên (NamedText) đầu tiên
                     var firstBlock = items?.FirstOrDefault(b => b.Type == ContentBlockType.NamedText);
 
                     if (firstBlock != null)
                     {
                         string name = firstBlock.Name;
                         string content = firstBlock.Content ?? "";
-                        if (content.Length > 40) content = content.Substring(0, 40) + "...";
 
+                        // Nếu là chi tiết, hiển thị nhiều hơn
+                        int maxLength = isDetail ? 100 : 40;
+                        if (content.Length > maxLength) content = content.Substring(0, maxLength) + "...";
+
+                        if (string.IsNullOrWhiteSpace(name)) return content;
                         return $"{name} {content}";
                     }
-                    else // Nếu không có khối text, hiển thị file đầu tiên
+                    else
                     {
                         var firstFile = items?.FirstOrDefault(b => b.Type != ContentBlockType.NamedText);
-                        if (firstFile != null)
-                        {
-                            return $"({firstFile.Type} {firstFile.FileName})";
-                        }
-                        return $"({attribute.Name} trống)";
+                        if (firstFile != null) return $"{attribute.Name}: ({firstFile.Type}: {firstFile.FileName})";
+                        return $"{attribute.Name}: (trống)";
                     }
                 }
-                catch { return "(Lỗi định dạng nội dung)"; }
+                catch { return $"{attribute.Name}: (Lỗi định dạng nội dung)"; }
             }
-            // Logic cũ cho Text, Number, TextArea
-            return $"{value.Value}";
+
+            // Logic cho các loại khác
+            string valueString = value.Value;
+            if (!isDetail && (attribute.Type == FieldType.TextArea || attribute.Type == FieldType.Text))
+            {
+                if (valueString.Length > 50) valueString = valueString.Substring(0, 50) + "...";
+            }
+
+            return $"{attribute.Name} {valueString}";
+        }
+
+        [RelayCommand]
+        async Task ToggleExpand()
+        {
+            IsExpanded = !IsExpanded;
+
+            // Nếu đang mở rộng VÀ chi tiết chưa được tải
+            if (IsExpanded && DetailedAttributes.Count == 0)
+            {
+                await LoadDetailsAsync();
+            }
+        }
+
+        private async Task LoadDetailsAsync()
+        {
+            if (IsLoadingDetails || _dataAccess == null || _allAttributes == null) return;
+
+            IsLoadingDetails = true;
+            DetailedAttributes.Clear();
+
+            try
+            {
+                // Tải tất cả các giá trị
+                foreach (var attr in _allAttributes)
+                {
+                    var value = await _dataAccess.GetAttributeValueAsync(Entry.Id, attr.Id);
+
+                    // Nếu giá trị là null, tạo một AttributeValue rỗng
+                    if (value == null)
+                    {
+                        value = new AttributeValue
+                        {
+                            ContentEntryId = Entry.Id,
+                            AttributeDefinitionId = attr.Id,
+                            Value = string.Empty
+                        };
+                    }
+                    var attrVM = new DynamicAttributeViewModel(attr, value);
+                    DetailedAttributes.Add(attrVM);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi tải chi tiết: {ex.Message}");
+            }
+            finally
+            {
+                IsLoadingDetails = false;
+            }
         }
     }
 }

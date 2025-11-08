@@ -156,25 +156,109 @@
                                         IsVisible="{Binding IsExpanded}">
                                         <BindableLayout.ItemTemplate>
                                             <DataTemplate x:DataType="vm:ContentEntryViewModel">
-                                                <Frame
-                                                    Margin="0,5"
-                                                    Padding="10"
-                                                    BorderColor="LightGray"
-                                                    CornerRadius="5">
-                                                    <VerticalStackLayout>
-                                                        <Label
-                                                            FontAttributes="Bold"
-                                                            LineBreakMode="TailTruncation"
-                                                            MaxLines="1"
-                                                            Text="{Binding SummaryText1}" />
-                                                        <Label
-                                                            FontSize="Small"
-                                                            LineBreakMode="TailTruncation"
-                                                            MaxLines="1"
-                                                            Text="{Binding SummaryText2}"
-                                                            TextColor="Gray" />
+
+                                                <VerticalStackLayout Padding="0,5" Spacing="5">
+
+                                                    <Grid ColumnDefinitions="*,Auto,Auto">
+                                                        <Grid
+                                                            Grid.Column="0"
+                                                            ColumnDefinitions="*,*"
+                                                            ColumnSpacing="10"
+                                                            VerticalOptions="Center">
+                                                            <Grid.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding ToggleExpandCommand}" />
+                                                            </Grid.GestureRecognizers>
+
+                                                            <Label
+                                                                Grid.Column="0"
+                                                                FontAttributes="Bold"
+                                                                LineBreakMode="TailTruncation"
+                                                                MaxLines="1"
+                                                                Text="{Binding SummaryText1}"
+                                                                VerticalOptions="Center" />
+                                                            <Label
+                                                                Grid.Column="1"
+                                                                FontSize="Small"
+                                                                LineBreakMode="TailTruncation"
+                                                                MaxLines="1"
+                                                                Text="{Binding SummaryText2}"
+                                                                TextColor="Gray"
+                                                                VerticalOptions="Center" />
+                                                        </Grid>
+                                                    </Grid>
+
+                                                    <VerticalStackLayout
+                                                        Margin="20,5,0,5"
+                                                        BindableLayout.ItemsSource="{Binding DetailedAttributes}"
+                                                        IsVisible="{Binding IsExpanded}"
+                                                        Spacing="8">
+
+                                                        <BindableLayout.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:DynamicAttributeViewModel">
+                                                                <VerticalStackLayout Spacing="3">
+
+                                                                    <Label
+                                                                        FontAttributes="Bold"
+                                                                        Text="{Binding DisplayName}"
+                                                                        TextColor="{StaticResource Primary}" />
+
+                                                                    <Label
+                                                                        IsVisible="{Binding FieldType, Converter={StaticResource IsNotFlexibleContentConverter}}"
+                                                                        LineBreakMode="WordWrap"
+                                                                        Text="{Binding StringValue}" />
+
+                                                                    <VerticalStackLayout
+                                                                        BindableLayout.ItemsSource="{Binding FlexibleContentList}"
+                                                                        IsVisible="{Binding FieldType, Converter={StaticResource IsFlexibleContentConverter}}"
+                                                                        Spacing="5">
+
+                                                                        <BindableLayout.ItemTemplate>
+                                                                            <DataTemplate x:DataType="model:FlexibleContentBlock">
+                                                                                <VerticalStackLayout Spacing="2">
+
+                                                                                    <VerticalStackLayout IsVisible="{Binding IsNamedText}">
+                                                                                        <Label FontAttributes="Bold" Text="{Binding Name}" />
+                                                                                        <Label LineBreakMode="WordWrap" Text="{Binding Content}" />
+                                                                                    </VerticalStackLayout>
+
+                                                                                    <Frame
+                                                                                        Margin="0,5"
+                                                                                        Padding="0"
+                                                                                        BorderColor="LightGray"
+                                                                                        HeightRequest="100"
+                                                                                        HorizontalOptions="Start"
+                                                                                        IsVisible="{Binding IsImage}"
+                                                                                        WidthRequest="150">
+                                                                                        <Image Aspect="AspectFill" Source="{Binding FilePath}" />
+                                                                                    </Frame>
+
+                                                                                    <Label
+                                                                                        FontAttributes="Italic"
+                                                                                        IsVisible="{Binding IsPdf}"
+                                                                                        TextColor="Gray">
+                                                                                        <Label.FormattedText>
+                                                                                            <FormattedString>
+                                                                                                <Span Text="PDF: " />
+                                                                                                <Span Text="{Binding FileName}" />
+                                                                                            </FormattedString>
+                                                                                        </Label.FormattedText>
+                                                                                    </Label>
+
+                                                                                </VerticalStackLayout>
+                                                                            </DataTemplate>
+                                                                        </BindableLayout.ItemTemplate>
+                                                                    </VerticalStackLayout>
+                                                                </VerticalStackLayout>
+                                                            </DataTemplate>
+                                                        </BindableLayout.ItemTemplate>
                                                     </VerticalStackLayout>
-                                                </Frame>
+
+                                                    <ActivityIndicator
+                                                        Margin="20,0,0,0"
+                                                        HorizontalOptions="Start"
+                                                        IsRunning="{Binding IsLoadingDetails}"
+                                                        IsVisible="{Binding IsLoadingDetails}" />
+                                                </VerticalStackLayout>
                                             </DataTemplate>
                                         </BindableLayout.ItemTemplate>
                                     </VerticalStackLayout>
