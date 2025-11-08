@@ -128,7 +128,6 @@ namespace PresenterApp.ViewModels
         }
         async Task LoadAttributesForFilterAsync()
         {
-            await LoadCommonAttributesAsync();
             await LoadPrivateAttributesAsync();
 
             _allAttributesForBook = CommonAttributes.Concat(PrivateAttributes).ToList();

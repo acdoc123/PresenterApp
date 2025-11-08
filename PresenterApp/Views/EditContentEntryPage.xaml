@@ -95,9 +95,65 @@
                         Text="Chọn PDF" />
                 </VerticalStackLayout>
             </DataTemplate>
+            <DataTemplate x:Key="NamedTextListTemplate" x:DataType="vm:DynamicAttributeViewModel">
+                <VerticalStackLayout Padding="0,10" Spacing="5">
+                    <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
+
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding NamedEntryList}" Spacing="5">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="model:NamedTextEntry">
+                                <Frame
+                                    Padding="10"
+                                    BorderColor="LightGray"
+                                    CornerRadius="5">
+                                    <Grid
+                                        ColumnDefinitions="*,Auto"
+                                        ColumnSpacing="5"
+                                        RowDefinitions="Auto,*"
+                                        RowSpacing="5">
+
+                                        <Entry
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            FontAttributes="Bold"
+                                            Placeholder="Tên mục (ví dụ: 1, ĐK...)"
+                                            Text="{Binding Name}" />
+
+                                        <Button
+                                            Grid.Row="0"
+                                            Grid.Column="1"
+                                            BackgroundColor="Transparent"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DynamicAttributeViewModel}}, Path=DeleteNamedEntryCommand}"
+                                            CommandParameter="{Binding .}"
+                                            Text="X"
+                                            TextColor="Red"
+                                            WidthRequest="40" />
+
+                                        <Editor
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="2"
+                                            AutoSize="Disabled"
+                                            HeightRequest="100"
+                                            Placeholder="Nhập nội dung..."
+                                            Text="{Binding Content}" />
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Button
+                        Margin="0,5,0,0"
+                        Command="{Binding AddNewNamedEntryCommand}"
+                        HorizontalOptions="Start"
+                        Text="+ Thêm mục" />
+                </VerticalStackLayout>
+            </DataTemplate>
             <local:AttributeTemplateSelector
                 x:Key="AttributeSelector"
                 ImageTemplate="{StaticResource ImageTemplate}"
+                NamedTextListTemplate="{StaticResource NamedTextListTemplate}"
                 NumberTemplate="{StaticResource NumberTemplate}"
                 PdfTemplate="{StaticResource PdfTemplate}"
                 TextAreaTemplate="{StaticResource TextAreaTemplate}"

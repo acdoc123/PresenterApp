@@ -2,6 +2,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PresenterApp.Models;
+using System.Collections.ObjectModel;
+using System.Text.Json;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 
@@ -20,22 +24,27 @@ namespace PresenterApp.ViewModels
         private string stringValue;
 
         // 2. Đây là thuộc tính đầy đủ mà UI liên kết (bind) tới
-        [NotifyPropertyChangedFor(nameof(FileName))]
-        [NotifyPropertyChangedFor(nameof(IsFileSelected))]
         public string StringValue
         {
             get => stringValue;
             set
             {
-                // 3. Sử dụng SetProperty để thông báo cho UI biết giá trị đã thay đổi
                 if (SetProperty(ref stringValue, value))
                 {
-                    // Cập nhật giá trị của Model (Value.Value) ngay khi
-                    // UI (Entry, Editor...) cập nhật thuộc tính này.
-                    Value.Value = value;
+                    if (Definition.Type != FieldType.NamedTextList)
+                    {
+                        Value.Value = value;
+                    }
+
+                    // THÊM: Gọi OnPropertyChanged thủ công
+                    OnPropertyChanged(nameof(FileName));
+                    OnPropertyChanged(nameof(IsFileSelected));
                 }
             }
         }
+        // 4. Danh sách cho các mục con (chỉ dùng cho FieldType.NamedTextList)
+        [ObservableProperty]
+        ObservableCollection<NamedTextEntry> namedEntryList;
 
         // Thuộc tính để hiển thị tên file (cho PDF)
         public string FileName => Path.GetFileName(StringValue);
@@ -47,8 +56,101 @@ namespace PresenterApp.ViewModels
         {
             Definition = definition;
             Value = value;
-            // Khởi tạo giá trị ban đầu cho trường private
-            stringValue = value.Value;
+
+            if (Definition.Type == FieldType.NamedTextList)
+            {
+                // Khởi tạo danh sách
+                NamedEntryList = new ObservableCollection<NamedTextEntry>();
+
+                // Deserialize dữ liệu từ JSON (nếu có)
+                if (!string.IsNullOrWhiteSpace(value.Value))
+                {
+                    try
+                    {
+                        var items = JsonSerializer.Deserialize<List<NamedTextEntry>>(value.Value);
+                        if (items != null)
+                        {
+                            foreach (var item in items)
+                            {
+                                // Gắn sự kiện để theo dõi thay đổi Tên/Nội dung
+                                item.PropertyChanged += OnEntryPropertyChanged;
+                                NamedEntryList.Add(item);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Lỗi deserialize NamedTextList: {ex.Message}");
+                    }
+                }
+
+                // Gắn sự kiện để theo dõi Thêm/Xóa mục
+                NamedEntryList.CollectionChanged += OnListCollectionChanged;
+            }
+            else
+            {
+                // Logic cho các loại (Text, Image, v.v.)
+                stringValue = value.Value;
+            }
+        }
+        // Được gọi khi Tên/Nội dung của một mục con thay đổi
+        private void OnEntryPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            SerializeListToValue();
+        }
+
+        // Được gọi khi một mục con được Thêm/Xóa khỏi danh sách
+        private void OnListCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            // Nếu thêm item mới, gắn sự kiện
+            if (e.NewItems != null)
+            {
+                foreach (NamedTextEntry item in e.NewItems)
+                {
+                    item.PropertyChanged += OnEntryPropertyChanged;
+                }
+            }
+            // Nếu xóa item, gỡ sự kiện
+            if (e.OldItems != null)
+            {
+                foreach (NamedTextEntry item in e.OldItems)
+                {
+                    item.PropertyChanged -= OnEntryPropertyChanged;
+                }
+            }
+            SerializeListToValue();
+        }
+
+        // Hàm chính: chuyển đổi danh sách thành chuỗi JSON và lưu vào Model
+        private void SerializeListToValue()
+        {
+            Value.Value = JsonSerializer.Serialize(NamedEntryList);
+        }
+
+        [RelayCommand]
+        void AddNewNamedEntry()
+        {
+            // Thêm mục mới (sự kiện CollectionChanged sẽ tự động serialize)
+            NamedEntryList.Add(new NamedTextEntry { Name = "Mục mới", Content = "" });
+        }
+
+        [RelayCommand]
+        async Task DeleteNamedEntry(NamedTextEntry entry)
+        {
+            if (entry == null) return;
+
+            string entryName = string.IsNullOrWhiteSpace(entry.Name) ? "(mục không tên)" : entry.Name;
+
+            bool confirm = await Shell.Current.DisplayAlert(
+                "Xác nhận Xóa",
+                $"Bạn có chắc muốn xóa mục '{entryName}'?",
+                "Có",
+                "Không");
+
+            if (confirm)
+            {
+                NamedEntryList.Remove(entry);
+            }
         }
 
         // Lệnh chọn ảnh
