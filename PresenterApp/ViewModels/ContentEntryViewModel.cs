@@ -79,8 +79,7 @@ namespace PresenterApp.ViewModels
                         string content = firstBlock.Content ?? "";
                         if (content.Length > 40) content = content.Substring(0, 40) + "...";
 
-                        // Định dạng: "Tên: Nội dung..." (Đúng ý bạn)
-                        return $"{name}: {content}";
+                        return $"{name} {content}";
                     }
                     else // Nếu không có khối text, hiển thị file đầu tiên
                     {
