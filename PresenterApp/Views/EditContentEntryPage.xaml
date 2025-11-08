@@ -11,6 +11,7 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
+
             <DataTemplate x:Key="TextTemplate" x:DataType="vm:DynamicAttributeViewModel">
                 <VerticalStackLayout Padding="0,10">
                     <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
@@ -39,123 +40,167 @@
                 </VerticalStackLayout>
             </DataTemplate>
 
-            <DataTemplate x:Key="ImageTemplate" x:DataType="vm:DynamicAttributeViewModel">
-                <VerticalStackLayout Padding="0,10" Spacing="5">
-                    <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
+            <DataTemplate x:Key="NamedTextBlockTemplate" x:DataType="model:FlexibleContentBlock">
+                <Frame
+                    Margin="0,5"
+                    Padding="10"
+                    BorderColor="LightGray"
+                    CornerRadius="5">
+                    <Grid
+                        ColumnDefinitions="*,Auto"
+                        RowDefinitions="Auto,*"
+                        RowSpacing="5">
+                        <Entry
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            Placeholder="Tên mục (ví dụ: 1, ĐK...)"
+                            Text="{Binding Name}" />
 
-                    <Image
-                        Aspect="AspectFit"
-                        HeightRequest="150"
-                        IsVisible="{Binding IsFileSelected}"
-                        Source="{Binding StringValue}"
-                        WidthRequest="150" />
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            BackgroundColor="Transparent"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DynamicAttributeViewModel}}, Path=DeleteBlockCommand}"
+                            CommandParameter="{Binding .}"
+                            Text="X"
+                            TextColor="Red"
+                            WidthRequest="40" />
 
-                    <Button
-                        Command="{Binding PickImageCommand}"
-                        HorizontalOptions="Start"
-                        IsVisible="{Binding IsFileSelected, Converter={StaticResource InvertedBoolConverter}}"
-                        Text="Chọn Ảnh" />
-
-                    <Button
-                        BackgroundColor="Transparent"
-                        Command="{Binding ClearFileCommand}"
-                        HorizontalOptions="Start"
-                        IsVisible="{Binding IsFileSelected}"
-                        Text="Xóa Ảnh"
-                        TextColor="Red" />
-                </VerticalStackLayout>
+                        <Editor
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            AutoSize="Disabled"
+                            HeightRequest="120"
+                            Placeholder="Nhập nội dung..."
+                            Text="{Binding Content}" />
+                    </Grid>
+                </Frame>
             </DataTemplate>
 
-            <DataTemplate x:Key="PdfTemplate" x:DataType="vm:DynamicAttributeViewModel">
+            <DataTemplate x:Key="ImageBlockTemplate" x:DataType="model:FlexibleContentBlock">
+                <Frame
+                    Margin="0,5"
+                    Padding="10"
+                    BorderColor="CornflowerBlue"
+                    CornerRadius="5">
+                    <Grid
+                        ColumnDefinitions="*,Auto"
+                        RowDefinitions="Auto,*"
+                        RowSpacing="5">
+                        <Label
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            FontAttributes="Bold"
+                            Text="Hình ảnh" />
+                        <Image
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Aspect="AspectFit"
+                            HeightRequest="200"
+                            Source="{Binding FilePath}" />
+
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            BackgroundColor="Transparent"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DynamicAttributeViewModel}}, Path=DeleteBlockCommand}"
+                            CommandParameter="{Binding .}"
+                            Text="X"
+                            TextColor="Red"
+                            WidthRequest="40" />
+                    </Grid>
+                </Frame>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PdfBlockTemplate" x:DataType="model:FlexibleContentBlock">
+                <Frame
+                    Margin="0,5"
+                    Padding="10"
+                    BorderColor="IndianRed"
+                    CornerRadius="5">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="5">
+                        <Label Grid.Column="0" VerticalOptions="Center">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span FontAttributes="Bold" Text="PDF: " />
+                                    <Span Text="{Binding FileName}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DynamicAttributeViewModel}}, Path=OpenFileCommand}"
+                            CommandParameter="{Binding .}"
+                            Text="Mở" />
+                        <Button
+                            Grid.Column="2"
+                            BackgroundColor="Transparent"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DynamicAttributeViewModel}}, Path=DeleteBlockCommand}"
+                            CommandParameter="{Binding .}"
+                            Text="X"
+                            TextColor="Red"
+                            WidthRequest="40" />
+                    </Grid>
+                </Frame>
+            </DataTemplate>
+
+            <local:ContentBlockTemplateSelector
+                x:Key="ContentBlockSelector"
+                ImageBlockTemplate="{StaticResource ImageBlockTemplate}"
+                NamedTextBlockTemplate="{StaticResource NamedTextBlockTemplate}"
+                PdfBlockTemplate="{StaticResource PdfBlockTemplate}" />
+
+            <DataTemplate x:Key="FlexibleContentTemplate" x:DataType="vm:DynamicAttributeViewModel">
                 <VerticalStackLayout Padding="0,10" Spacing="5">
                     <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
 
-                    <Frame
-                        Padding="10"
-                        BorderColor="LightGray"
-                        IsVisible="{Binding IsFileSelected}">
-                        <HorizontalStackLayout Spacing="10">
+                    <HorizontalStackLayout
+                        Padding="5"
+                        BackgroundColor="LightGray"
+                        Spacing="5">
+                        <Label
+                            FontAttributes="Bold"
+                            Text="Thêm:"
+                            VerticalOptions="Center" />
+                        <Button
+                            Command="{Binding AddNamedTextBlockCommand}"
+                            FontSize="Small"
+                            HeightRequest="40"
+                            Text="+ Văn bản" />
+                        <Button
+                            Command="{Binding AddImageBlockCommand}"
+                            FontSize="Small"
+                            HeightRequest="40"
+                            Text="+ Ảnh" />
+                        <Button
+                            Command="{Binding AddPdfBlockCommand}"
+                            FontSize="Small"
+                            HeightRequest="40"
+                            Text="+ PDF" />
+                    </HorizontalStackLayout>
+
+                    <CollectionView
+                        Margin="0,10,0,0"
+                        ItemTemplate="{StaticResource ContentBlockSelector}"
+                        ItemsSource="{Binding FlexibleContentList}"
+                        SelectionMode="None">
+                        <CollectionView.EmptyView>
                             <Label
-                                FontAttributes="Italic"
-                                Text="{Binding FileName}"
-                                VerticalOptions="Center" />
-                            <Button Command="{Binding OpenFileCommand}" Text="Mở File" />
-                            <Button
-                                BackgroundColor="Transparent"
-                                Command="{Binding ClearFileCommand}"
-                                Text="Xóa"
-                                TextColor="Red" />
-                        </HorizontalStackLayout>
-                    </Frame>
-
-                    <Button
-                        Command="{Binding PickPdfCommand}"
-                        HorizontalOptions="Start"
-                        IsVisible="{Binding IsFileSelected, Converter={StaticResource InvertedBoolConverter}}"
-                        Text="Chọn PDF" />
+                                Padding="10"
+                                HorizontalOptions="Center"
+                                Text="Nhấn nút + để thêm nội dung"
+                                TextColor="Gray" />
+                        </CollectionView.EmptyView>
+                    </CollectionView>
                 </VerticalStackLayout>
             </DataTemplate>
-            <DataTemplate x:Key="NamedTextListTemplate" x:DataType="vm:DynamicAttributeViewModel">
-                <VerticalStackLayout Padding="0,10" Spacing="5">
-                    <Label FontAttributes="Bold" Text="{Binding DisplayName}" />
 
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding NamedEntryList}" Spacing="5">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="model:NamedTextEntry">
-                                <Frame
-                                    Padding="10"
-                                    BorderColor="LightGray"
-                                    CornerRadius="5">
-                                    <Grid
-                                        ColumnDefinitions="*,Auto"
-                                        ColumnSpacing="5"
-                                        RowDefinitions="Auto,*"
-                                        RowSpacing="5">
-
-                                        <Entry
-                                            Grid.Row="0"
-                                            Grid.Column="0"
-                                            FontAttributes="Bold"
-                                            Placeholder="Tên mục (ví dụ: 1, ĐK...)"
-                                            Text="{Binding Name}" />
-
-                                        <Button
-                                            Grid.Row="0"
-                                            Grid.Column="1"
-                                            BackgroundColor="Transparent"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DynamicAttributeViewModel}}, Path=DeleteNamedEntryCommand}"
-                                            CommandParameter="{Binding .}"
-                                            Text="X"
-                                            TextColor="Red"
-                                            WidthRequest="40" />
-
-                                        <Editor
-                                            Grid.Row="1"
-                                            Grid.Column="0"
-                                            Grid.ColumnSpan="2"
-                                            AutoSize="Disabled"
-                                            HeightRequest="100"
-                                            Placeholder="Nhập nội dung..."
-                                            Text="{Binding Content}" />
-                                    </Grid>
-                                </Frame>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-
-                    <Button
-                        Margin="0,5,0,0"
-                        Command="{Binding AddNewNamedEntryCommand}"
-                        HorizontalOptions="Start"
-                        Text="+ Thêm mục" />
-                </VerticalStackLayout>
-            </DataTemplate>
             <local:AttributeTemplateSelector
                 x:Key="AttributeSelector"
-                ImageTemplate="{StaticResource ImageTemplate}"
-                NamedTextListTemplate="{StaticResource NamedTextListTemplate}"
+                FlexibleContentTemplate="{StaticResource FlexibleContentTemplate}"
                 NumberTemplate="{StaticResource NumberTemplate}"
-                PdfTemplate="{StaticResource PdfTemplate}"
                 TextAreaTemplate="{StaticResource TextAreaTemplate}"
                 TextTemplate="{StaticResource TextTemplate}" />
         </ResourceDictionary>
@@ -164,58 +209,16 @@
     <Grid RowDefinitions="*,Auto">
         <ScrollView Grid.Row="0">
             <VerticalStackLayout Padding="20" Spacing="5">
+
                 <Label
                     FontAttributes="Bold"
                     FontSize="Medium"
                     Text="Thuộc tính Nội dung" />
+
                 <VerticalStackLayout BindableLayout.ItemTemplateSelector="{StaticResource AttributeSelector}" BindableLayout.ItemsSource="{Binding DynamicAttributes}" />
 
-                <BoxView
-                    Margin="0,15"
-                    HeightRequest="1"
-                    Color="LightGray" />
-
-                <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
-                    <Label
-                        Grid.Column="0"
-                        FontAttributes="Bold"
-                        FontSize="Medium"
-                        Text="Tags cho Nội dung này"
-                        VerticalOptions="Center" />
-                    <Button
-                        Grid.Column="1"
-                        Command="{Binding OpenTagSelectionModalCommand}"
-                        IsEnabled="{Binding CurrentEntry.Id, Converter={StaticResource IntToBoolConverter}}"
-                        Text="Quản lý Tags (+)" />
-                </Grid>
-                <Label
-                    FontAttributes="Italic"
-                    IsVisible="{Binding CurrentEntry.Id, Converter={StaticResource IntToBoolConverter}, ConverterParameter=invert}"
-                    Text="Lưu nội dung trước khi thêm tag"
-                    TextColor="Gray" />
-
-                <CollectionView
-                    Margin="0,5,0,0"
-                    ItemsSource="{Binding SelectedTags}"
-                    SelectionMode="None">
-                    <CollectionView.ItemsLayout>
-                        <GridItemsLayout Orientation="Vertical" Span="3" />
-                    </CollectionView.ItemsLayout>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="model:Tag">
-                            <Frame
-                                Margin="0,0,5,5"
-                                Padding="8,5"
-                                BorderColor="Gray"
-                                CornerRadius="8">
-                                <Label Text="{Binding Name}" VerticalOptions="Center" />
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
             </VerticalStackLayout>
         </ScrollView>
-
         <Button
             Grid.Row="1"
             Margin="20"

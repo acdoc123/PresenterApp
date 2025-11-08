@@ -63,44 +63,37 @@ namespace PresenterApp.ViewModels
                 return $"({attribute.Name} trống)";
             }
 
-            // KIỂM TRA LOẠI NAMEDTEXTLIST
-            if (attribute.Type == FieldType.NamedTextList)
+            if (attribute.Type == FieldType.FlexibleContent)
             {
                 try
                 {
                     // Giải mã JSON
-                    var items = JsonSerializer.Deserialize<List<NamedTextEntry>>(value.Value);
-                    var firstEntry = items?.FirstOrDefault();
+                    var items = JsonSerializer.Deserialize<List<FlexibleContentBlock>>(value.Value);
 
-                    if (firstEntry != null)
+                    // Tìm khối văn bản có tên (NamedText) đầu tiên
+                    var firstBlock = items?.FirstOrDefault(b => b.Type == ContentBlockType.NamedText);
+
+                    if (firstBlock != null)
                     {
-                        // Lấy nội dung và cắt ngắn nếu quá 50 ký tự
-                        string contentSummary = firstEntry.Content ?? "";
-                        if (contentSummary.Length > 50)
-                        {
-                            contentSummary = contentSummary.Substring(0, 50) + "...";
-                        }
+                        string name = firstBlock.Name;
+                        string content = firstBlock.Content ?? "";
+                        if (content.Length > 40) content = content.Substring(0, 40) + "...";
 
-                        // Định dạng đẹp: "1. Lời 1..."
-                        // Nếu tên (Name) trống, chỉ hiển thị nội dung
-                        if (string.IsNullOrWhiteSpace(firstEntry.Name))
-                        {
-                            return contentSummary;
-                        }
-                        return $"{firstEntry.Name} {contentSummary}";
+                        return $"{name} {content}";
                     }
-                    else
+                    else // Nếu không có khối text, hiển thị file đầu tiên
                     {
+                        var firstFile = items?.FirstOrDefault(b => b.Type != ContentBlockType.NamedText);
+                        if (firstFile != null)
+                        {
+                            return $"({firstFile.Type} {firstFile.FileName})";
+                        }
                         return $"({attribute.Name} trống)";
                     }
                 }
-                catch
-                {
-                    return "(Lỗi hiển thị danh sách)"; // Fallback nếu JSON bị lỗi
-                }
+                catch { return "(Lỗi định dạng nội dung)"; }
             }
-
-            // Logic cũ cho các loại khác (Text, Number, v.v.)
+            // Logic cũ cho Text, Number, TextArea
             return $"{value.Value}";
         }
     }

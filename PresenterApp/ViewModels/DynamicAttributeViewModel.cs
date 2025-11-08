@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PresenterApp.Models;
+using PresenterApp.Services;
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Collections.Specialized;
@@ -15,15 +16,11 @@ namespace PresenterApp.ViewModels
     {
         public AttributeDefinition Definition { get; set; }
         public AttributeValue Value { get; set; }
-
         public string DisplayName => Definition.Name;
         public FieldType FieldType => Definition.Type;
 
-
-        // 1. Đây là trường private lưu trữ giá trị
+        // 1. Cho các loại đơn giản (Text, TextArea, Number)
         private string stringValue;
-
-        // 2. Đây là thuộc tính đầy đủ mà UI liên kết (bind) tới
         public string StringValue
         {
             get => stringValue;
@@ -31,219 +28,145 @@ namespace PresenterApp.ViewModels
             {
                 if (SetProperty(ref stringValue, value))
                 {
-                    if (Definition.Type != FieldType.NamedTextList)
+                    // CHỈ cập nhật nếu là loại đơn giản
+                    if (Definition.Type != FieldType.FlexibleContent)
                     {
                         Value.Value = value;
                     }
-
-                    // THÊM: Gọi OnPropertyChanged thủ công
-                    OnPropertyChanged(nameof(FileName));
-                    OnPropertyChanged(nameof(IsFileSelected));
                 }
             }
         }
-        // 4. Danh sách cho các mục con (chỉ dùng cho FieldType.NamedTextList)
+
+        // 2. Cho loại FlexibleContent MỚI
         [ObservableProperty]
-        ObservableCollection<NamedTextEntry> namedEntryList;
-
-        // Thuộc tính để hiển thị tên file (cho PDF)
-        public string FileName => Path.GetFileName(StringValue);
-
-        // Thuộc tính để biết file đã được chọn hay chưa
-        public bool IsFileSelected => !string.IsNullOrWhiteSpace(StringValue);
+        ObservableCollection<FlexibleContentBlock> flexibleContentList;
 
         public DynamicAttributeViewModel(AttributeDefinition definition, AttributeValue value)
         {
             Definition = definition;
             Value = value;
 
-            if (Definition.Type == FieldType.NamedTextList)
+            // --- CẬP NHẬT LOGIC KHỞI TẠO ---
+            if (Definition.Type == FieldType.FlexibleContent)
             {
-                // Khởi tạo danh sách
-                NamedEntryList = new ObservableCollection<NamedTextEntry>();
-
-                // Deserialize dữ liệu từ JSON (nếu có)
+                FlexibleContentList = new ObservableCollection<FlexibleContentBlock>();
                 if (!string.IsNullOrWhiteSpace(value.Value))
                 {
                     try
                     {
-                        var items = JsonSerializer.Deserialize<List<NamedTextEntry>>(value.Value);
+                        // Deserialize danh sách các khối
+                        var items = JsonSerializer.Deserialize<List<FlexibleContentBlock>>(value.Value);
                         if (items != null)
                         {
                             foreach (var item in items)
                             {
-                                // Gắn sự kiện để theo dõi thay đổi Tên/Nội dung
-                                item.PropertyChanged += OnEntryPropertyChanged;
-                                NamedEntryList.Add(item);
+                                item.PropertyChanged += OnBlockPropertyChanged; // Theo dõi thay đổi
+                                FlexibleContentList.Add(item);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"Lỗi deserialize NamedTextList: {ex.Message}");
+                        Debug.WriteLine($"Lỗi deserialize FlexibleContent: {ex.Message}");
                     }
                 }
-
-                // Gắn sự kiện để theo dõi Thêm/Xóa mục
-                NamedEntryList.CollectionChanged += OnListCollectionChanged;
+                // Gắn sự kiện để theo dõi Thêm/Xóa khối
+                FlexibleContentList.CollectionChanged += OnBlockListCollectionChanged;
             }
             else
             {
-                // Logic cho các loại (Text, Image, v.v.)
+                // Logic cũ cho Text, TextArea, Number
                 stringValue = value.Value;
             }
-        }
-        // Được gọi khi Tên/Nội dung của một mục con thay đổi
-        private void OnEntryPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            SerializeListToValue();
+            // -----------------------------
         }
 
-        // Được gọi khi một mục con được Thêm/Xóa khỏi danh sách
-        private void OnListCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        // --- HÀM XỬ LÝ SỰ KIỆN CHO FlexibleContent ---
+
+        // Được gọi khi nội dung của một khối thay đổi (ví dụ: gõ chữ)
+        private void OnBlockPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // Nếu thêm item mới, gắn sự kiện
+            SerializeBlockListToValue();
+        }
+
+        // Được gọi khi một khối được Thêm/Xóa
+        private void OnBlockListCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
             if (e.NewItems != null)
             {
-                foreach (NamedTextEntry item in e.NewItems)
+                foreach (FlexibleContentBlock item in e.NewItems)
                 {
-                    item.PropertyChanged += OnEntryPropertyChanged;
+                    item.PropertyChanged += OnBlockPropertyChanged;
                 }
             }
-            // Nếu xóa item, gỡ sự kiện
             if (e.OldItems != null)
             {
-                foreach (NamedTextEntry item in e.OldItems)
+                foreach (FlexibleContentBlock item in e.OldItems)
                 {
-                    item.PropertyChanged -= OnEntryPropertyChanged;
+                    item.PropertyChanged -= OnBlockPropertyChanged;
                 }
             }
-            SerializeListToValue();
+            SerializeBlockListToValue();
         }
 
-        // Hàm chính: chuyển đổi danh sách thành chuỗi JSON và lưu vào Model
-        private void SerializeListToValue()
+        // Chuyển đổi danh sách thành JSON và lưu vào Model
+        private void SerializeBlockListToValue()
         {
-            Value.Value = JsonSerializer.Serialize(NamedEntryList);
+            Value.Value = JsonSerializer.Serialize(FlexibleContentList);
+        }
+
+        // --- COMMANDS MỚI CHO FlexibleContent ---
+
+        [RelayCommand]
+        void AddNamedTextBlock()
+        {
+            // Thêm khối văn bản CÓ TÊN theo yêu cầu của bạn
+            FlexibleContentList.Add(new FlexibleContentBlock { Type = ContentBlockType.NamedText, Name = "Tiêu đề" });
         }
 
         [RelayCommand]
-        void AddNewNamedEntry()
+        async Task AddImageBlock()
         {
-            // Thêm mục mới (sự kiện CollectionChanged sẽ tự động serialize)
-            NamedEntryList.Add(new NamedTextEntry { Name = "Mục mới", Content = "" });
+            var file = await FileHelper.PickImageAsync();
+            if (file == null) return;
+            var newPath = await FileHelper.CopyFileToAppData(file);
+            FlexibleContentList.Add(new FlexibleContentBlock { Type = ContentBlockType.Image, FilePath = newPath });
         }
 
         [RelayCommand]
-        async Task DeleteNamedEntry(NamedTextEntry entry)
+        async Task AddPdfBlock()
         {
-            if (entry == null) return;
+            var file = await FileHelper.PickPdfAsync();
+            if (file == null) return;
+            var newPath = await FileHelper.CopyFileToAppData(file);
+            FlexibleContentList.Add(new FlexibleContentBlock { Type = ContentBlockType.Pdf, FilePath = newPath });
+        }
 
-            string entryName = string.IsNullOrWhiteSpace(entry.Name) ? "(mục không tên)" : entry.Name;
+        [RelayCommand]
+        async Task DeleteBlock(FlexibleContentBlock block)
+        {
+            if (block == null) return;
 
-            bool confirm = await Shell.Current.DisplayAlert(
-                "Xác nhận Xóa",
-                $"Bạn có chắc muốn xóa mục '{entryName}'?",
-                "Có",
-                "Không");
-
+            bool confirm = await Shell.Current.DisplayAlert("Xác nhận", "Xóa khối nội dung này?", "Có", "Không");
             if (confirm)
             {
-                NamedEntryList.Remove(entry);
+                FlexibleContentList.Remove(block);
+                // (Sau này có thể thêm logic xóa tệp trong AppData tại đây)
             }
         }
 
-        // Lệnh chọn ảnh
         [RelayCommand]
-        async Task PickImageAsync()
+        async Task OpenFile(FlexibleContentBlock block)
         {
+            if (block == null || !block.IsPdf || string.IsNullOrWhiteSpace(block.FilePath)) return;
             try
             {
-                var photo = await MediaPicker.PickPhotoAsync();
-                if (photo == null) return;
-
-                // Sao chép file vào thư mục dữ liệu ứng dụng
-                var localPath = await CopyFileToAppData(photo);
-                // Cập nhật thuộc tính public (sẽ kích hoạt logic 'set' ở trên)
-                StringValue = localPath;
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Lỗi", $"Không thể chọn ảnh: {ex.Message}", "OK");
-            }
-        }
-
-        // Lệnh chọn PDF
-        [RelayCommand]
-        async Task PickPdfAsync()
-        {
-            try
-            {
-                var fileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                {
-                    { DevicePlatform.iOS, new[] { "com.adobe.pdf" } },
-                    { DevicePlatform.Android, new[] { "application/pdf" } },
-                    { DevicePlatform.WinUI, new[] { ".pdf" } },
-                    { DevicePlatform.MacCatalyst, new[] { "pdf" } },
-                });
-
-                var file = await FilePicker.PickAsync(new PickOptions { FileTypes = fileTypes });
-                if (file == null) return;
-
-                // Sao chép file
-                var localPath = await CopyFileToAppData(file);
-                // Cập nhật thuộc tính public
-                StringValue = localPath;
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Lỗi", $"Không thể chọn PDF: {ex.Message}", "OK");
-            }
-        }
-
-        // Lệnh mở file (dùng cho PDF)
-        [RelayCommand]
-        async Task OpenFileAsync()
-        {
-            if (!IsFileSelected) return;
-            try
-            {
-                await Launcher.OpenAsync(new OpenFileRequest(DisplayName, new ReadOnlyFile(StringValue)));
+                await Launcher.OpenAsync(new OpenFileRequest(block.FileName, new ReadOnlyFile(block.FilePath)));
             }
             catch (Exception ex)
             {
                 await Shell.Current.DisplayAlert("Lỗi", $"Không thể mở file: {ex.Message}", "OK");
             }
-        }
-
-        // Lệnh xóa file đã chọn
-        [RelayCommand]
-        void ClearFile()
-        {
-            // Cập nhật thuộc tính public
-            StringValue = string.Empty;
-        }
-
-        // Hàm tiện ích sao chép file vào thư mục AppData
-        private async Task<string> CopyFileToAppData(FileResult fileResult)
-        {
-            // Tạo thư mục nếu chưa có
-            var dataDir = Path.Combine(FileSystem.AppDataDirectory, "UserDataFiles");
-            if (!Directory.Exists(dataDir))
-                Directory.CreateDirectory(dataDir);
-
-            // Tạo đường dẫn mới, duy nhất (để tránh trùng lặp)
-            var newFileName = $"{Guid.NewGuid()}_{fileResult.FileName}";
-            var newPath = Path.Combine(dataDir, newFileName);
-
-            // Sao chép stream
-            using (var stream = await fileResult.OpenReadAsync())
-            using (var newStream = File.Create(newPath))
-            {
-                await stream.CopyToAsync(newStream);
-            }
-
-            return newPath;
         }
     }
 }
