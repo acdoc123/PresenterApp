@@ -6,8 +6,6 @@ namespace PresenterApp.Models
         Text,      // Tên (textfield)
         TextArea,  // Nội dung (textarea)
         Number,    // Số (chỉ số)
-        Image,     // Hình ảnh
-        Pdf,        // File pdf
-        NamedTextList // Danh sách tên và giá trị (danh sách các trường text)
+        FlexibleContent
     }
 }
