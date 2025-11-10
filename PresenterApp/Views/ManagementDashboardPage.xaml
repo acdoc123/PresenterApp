@@ -11,10 +11,7 @@
     <ScrollView Padding="10">
         <VerticalStackLayout Spacing="15">
 
-            <Frame
-                Padding="10"
-                BorderColor="LightGray"
-                CornerRadius="5">
+            <Frame>
                 <VerticalStackLayout Spacing="5">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label
@@ -91,10 +88,7 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <Frame
-                Padding="10"
-                BorderColor="LightGray"
-                CornerRadius="5">
+            <Frame>
                 <VerticalStackLayout Spacing="5">
                     <Grid ColumnDefinitions="*,Auto">
                         <Label
