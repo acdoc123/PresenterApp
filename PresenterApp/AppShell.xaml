@@ -9,20 +9,23 @@
     Title="PresenterApp"
     Shell.FlyoutBehavior="Flyout">
     <ShellContent
-        Title="Quản lý"
-        ContentTemplate="{DataTemplate views:ManagementDashboardPage}"
-        Icon="{StaticResource IconBooks}"
-        Route="ManagementDashboardPage" />
+        Title="Tạo PPTX"
+        ContentTemplate="{DataTemplate views:CreatePresentationPage}"
+        Icon="{StaticResource IconCreate}"
+        Route="CreatePresentationPage" />
+
     <ShellContent
         Title="Nội dung"
         ContentTemplate="{DataTemplate views:ContentSearchPage}"
-        Icon="{StaticResource IconProjects}"
+        Icon="{StaticResource IconSearch}"
         Route="ContentSearchPage" />
+
     <ShellContent
-        Title="Tạo PPTX"
-        ContentTemplate="{DataTemplate views:CreatePresentationPage}"
-        Icon="{StaticResource IconDashboard}"
-        Route="CreatePresentationPage" />
+        Title="Quản lý"
+        ContentTemplate="{DataTemplate views:ManagementDashboardPage}"
+        Icon="{StaticResource IconManage}"
+        Route="ManagementDashboardPage" />
+
     <ShellContent
         Title="Cài đặt"
         ContentTemplate="{DataTemplate views:SettingsPage}"
