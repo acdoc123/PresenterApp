@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="PresenterApp.Views.Controls.ContentSearchSharedView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:model="clr-namespace:PresenterApp.Models"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    x:DataType="vm:ContentSearchSharedViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
+
+        <Picker
+            Title="Lọc theo Loại Sách"
+            Grid.Row="0"
+            Margin="10,5,10,0"
+            IsVisible="{Binding ShowBookTypeFilter}"
+            ItemDisplayBinding="{Binding Name}"
+            ItemsSource="{Binding FilterBookTypes}"
+            SelectedItem="{Binding SelectedBookType}" />
+
+        <Picker
+            Title="Lọc theo Sách"
+            Grid.Row="1"
+            Margin="10,5,10,0"
+            IsVisible="{Binding ShowBookFilter}"
+            ItemDisplayBinding="{Binding Name}"
+            ItemsSource="{Binding FilterBooks}"
+            SelectedItem="{Binding SelectedBook}" />
+
+        <Grid
+            Grid.Row="2"
+            Padding="10,5,10,0"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="10">
+            <Picker
+                Title="Lọc theo Thuộc tính"
+                Grid.Column="0"
+                ItemDisplayBinding="{Binding Name}"
+                ItemsSource="{Binding FilterAttributes}"
+                SelectedItem="{Binding SelectedAttribute}" />
+            <HorizontalStackLayout Grid.Column="1" VerticalOptions="Center">
+                <CheckBox IsChecked="{Binding IsExactSearch}" />
+                <Label Text="Chính xác" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <Grid
+            Grid.Row="3"
+            Padding="10,5,10,0"
+            ColumnDefinitions="*,Auto">
+            <Frame
+                Grid.Column="0"
+                Padding="5"
+                BorderColor="LightGray"
+                CornerRadius="5"
+                HeightRequest="50">
+                <ScrollView Orientation="Horizontal">
+                    <HorizontalStackLayout BindableLayout.ItemsSource="{Binding FilterTags}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="model:Tag">
+                                <Frame
+                                    Margin="0,0,5,0"
+                                    Padding="8,5"
+                                    BorderColor="Gray"
+                                    CornerRadius="8">
+                                    <Label Text="{Binding Name}" VerticalOptions="Center" />
+                                </Frame>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                </ScrollView>
+            </Frame>
+            <Button
+                Grid.Column="1"
+                Command="{Binding OpenTagFilterCommand}"
+                Text="Lọc Tags..."
+                WidthRequest="110" />
+        </Grid>
+
+        <SearchBar
+            Grid.Row="4"
+            Margin="10,5,10,10"
+            Placeholder="Tìm kiếm trong thuộc tính đã lọc..."
+            SearchCommand="{Binding ExecuteSearchCommand}"
+            Text="{Binding SearchText}" />
+
+        <BoxView
+            Grid.Row="5"
+            HeightRequest="1"
+            Color="LightGray" />
+
+        <ActivityIndicator
+            Grid.Row="6"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsBusySearching}"
+            IsVisible="{Binding IsBusySearching}"
+            VerticalOptions="Center" />
+
+        <ScrollView Grid.Row="6" IsVisible="{Binding IsBusySearching, Converter={StaticResource InvertedBoolConverter}}">
+            <CollectionView ItemsSource="{Binding SearchResults}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BookSummaryViewModel">
+                        <VerticalStackLayout Padding="10" Spacing="5">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleExpandCommand}" />
+                                </Grid.GestureRecognizers>
+
+                                <Label Grid.Column="0" VerticalOptions="Center">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span
+                                                FontAttributes="Bold"
+                                                FontSize="Large"
+                                                Text="{Binding Book.Name}" />
+                                            <Span Text=" (" />
+                                            <Span
+                                                FontAttributes="Italic"
+                                                Text="{Binding ResultCountText}"
+                                                TextColor="Gray" />
+                                            <Span Text=")" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </Grid>
+
+                            <VerticalStackLayout
+                                Margin="20,0,0,0"
+                                BindableLayout.ItemsSource="{Binding ContentEntries}"
+                                IsVisible="{Binding IsExpanded}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ContentEntryViewModel">
+                                        <VerticalStackLayout Padding="0,5" Spacing="5">
+                                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                                <Grid
+                                                    Grid.Column="0"
+                                                    ColumnDefinitions="*,*"
+                                                    ColumnSpacing="10"
+                                                    VerticalOptions="Center">
+                                                    <Grid.GestureRecognizers>
+                                                        <TapGestureRecognizer Command="{Binding ToggleExpandCommand}" />
+                                                    </Grid.GestureRecognizers>
+                                                    <Label
+                                                        Grid.Column="0"
+                                                        FontAttributes="Bold"
+                                                        LineBreakMode="TailTruncation"
+                                                        MaxLines="1"
+                                                        Text="{Binding SummaryText1}"
+                                                        VerticalOptions="Center" />
+                                                    <Label
+                                                        Grid.Column="1"
+                                                        FontSize="Small"
+                                                        LineBreakMode="TailTruncation"
+                                                        MaxLines="1"
+                                                        Text="{Binding SummaryText2}"
+                                                        TextColor="Gray"
+                                                        VerticalOptions="Center" />
+                                                </Grid>
+                                            </Grid>
+
+                                            <VerticalStackLayout
+                                                Margin="20,5,0,5"
+                                                BindableLayout.ItemsSource="{Binding DetailedAttributes}"
+                                                IsVisible="{Binding IsExpanded}"
+                                                Spacing="8">
+                                                <BindableLayout.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:DynamicAttributeViewModel">
+                                                        <VerticalStackLayout Spacing="3">
+                                                            <Label
+                                                                FontAttributes="Bold"
+                                                                Text="{Binding DisplayName}"
+                                                                TextColor="{StaticResource Primary}" />
+                                                        </VerticalStackLayout>
+                                                    </DataTemplate>
+                                                </BindableLayout.ItemTemplate>
+                                            </VerticalStackLayout>
+                                            <ActivityIndicator
+                                                Margin="20,0,0,0"
+                                                HorizontalOptions="Start"
+                                                IsRunning="{Binding IsLoadingDetails}"
+                                                IsVisible="{Binding IsLoadingDetails}" />
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                            <BoxView HeightRequest="1" Color="{StaticResource Gray100}" />
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </ScrollView>
+    </Grid>
+</ContentView>

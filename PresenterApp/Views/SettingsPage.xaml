@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="Cài đặt"
+    x:DataType="vm:SettingsViewModel">
+    <VerticalStackLayout Padding="20">
+        <Label
+            FontSize="Title"
+            HorizontalOptions="Center"
+            Text="Trang Cài đặt"
+            VerticalOptions="Center" />
+        <Label HorizontalOptions="Center" Text="Chức năng cài đặt (Giao diện sáng/tối, Ngôn ngữ, API Keys,...) sẽ được thêm vào đây." />
+    </VerticalStackLayout>
+</ContentPage>

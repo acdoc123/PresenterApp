@@ -8,9 +8,26 @@
     Title="PresenterApp"
     Shell.FlyoutBehavior="Disabled">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent
+            Title="Tạo PPTX"
+            ContentTemplate="{DataTemplate views:CreatePresentationPage}"
+            Route="CreatePresentationPage" />
+
+        <ShellContent
+            Title="Nội dung"
+            ContentTemplate="{DataTemplate views:ContentSearchPage}"
+            Route="ContentSearchPage" />
+
+        <ShellContent
+            Title="Quản lý"
+            ContentTemplate="{DataTemplate views:ManagementDashboardPage}"
+            Route="ManagementDashboardPage" />
+
+        <ShellContent
+            Title="Cài đặt"
+            ContentTemplate="{DataTemplate views:SettingsPage}"
+            Route="SettingsPage" />
+    </TabBar>
 
 </Shell>

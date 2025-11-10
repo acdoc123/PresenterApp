@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.CreatePresentationPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    Title="Tạo file trình chiếu"
+    x:DataType="vm:CreatePresentationViewModel">
+    <ScrollView>
+        <VerticalStackLayout Padding="10" Spacing="15">
+
+            <Grid
+                ColumnDefinitions="Auto,*,Auto"
+                ColumnSpacing="10"
+                VerticalOptions="Center">
+                <Label
+                    Grid.Column="0"
+                    FontAttributes="Bold"
+                    Text="Giao diện chủ đề:"
+                    VerticalOptions="Center" />
+                <Picker
+                    Grid.Column="1"
+                    ItemDisplayBinding="{Binding Name}"
+                    ItemsSource="{Binding PresentationThemes}"
+                    SelectedItem="{Binding SelectedTheme}"
+                    VerticalOptions="Center" />
+                <Button
+                    Grid.Column="2"
+                    Command="{Binding GoToEditThemeCommand}"
+                    FontAttributes="Bold"
+                    Text="⚙"
+                    VerticalOptions="Center"
+                    WidthRequest="50" />
+            </Grid>
+
+            <Grid
+                ColumnDefinitions="Auto,*,Auto"
+                ColumnSpacing="10"
+                VerticalOptions="Center">
+                <Label
+                    Grid.Column="0"
+                    FontAttributes="Bold"
+                    Text="Cấu trúc Trình chiếu:"
+                    VerticalOptions="Center" />
+                <Picker
+                    Grid.Column="1"
+                    ItemDisplayBinding="{Binding Name}"
+                    ItemsSource="{Binding PresentationStructures}"
+                    SelectedItem="{Binding SelectedStructure}"
+                    VerticalOptions="Center" />
+                <Button
+                    Grid.Column="2"
+                    Command="{Binding GoToEditStructureCommand}"
+                    FontAttributes="Bold"
+                    Text="⚙"
+                    VerticalOptions="Center"
+                    WidthRequest="50" />
+            </Grid>
+
+            <BoxView
+                Margin="0,10"
+                HeightRequest="1"
+                Color="{StaticResource Gray200}" />
+
+            <Button
+                HorizontalOptions="Fill"
+                IsEnabled="False"
+                Text="Tạo file PPTX (Demo)" />
+            <Label
+                FontSize="Small"
+                HorizontalTextAlignment="Center"
+                Text="*Chọn Giao diện và Cấu trúc để tạo file"
+                TextColor="{StaticResource Gray500}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

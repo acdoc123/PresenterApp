@@ -28,16 +28,20 @@ namespace PresenterApp
             builder.Services.AddSingleton<DataAccessService>();
             builder.Services.AddSingleton<FilterStateService>();
 
-            // Đăng ký Views và ViewModels
-            // Trang chính (gốc)
-            builder.Services.AddSingleton<MainPage>();
-            builder.Services.AddSingleton<HomeViewModel>();
-
-            // Trang Bảng điều khiển
+            // --- Đăng ký các Trang và ViewModel cho TabBar ---
             builder.Services.AddSingleton<ManagementDashboardPage>();
             builder.Services.AddSingleton<ManagementDashboardViewModel>();
 
-            // Các trang chỉnh sửa (dùng Transient vì chúng được tạo/hủy thường xuyên)
+            builder.Services.AddSingleton<CreatePresentationPage>();
+            builder.Services.AddSingleton<CreatePresentationViewModel>();
+
+            builder.Services.AddTransient<ContentSearchSharedViewModel>();
+            builder.Services.AddSingleton<ContentSearchPage>();
+
+            builder.Services.AddSingleton<SettingsPage>();
+            builder.Services.AddSingleton<SettingsViewModel>();
+
+
             builder.Services.AddTransient<EditBookTypePage>();
             builder.Services.AddTransient<EditBookTypeViewModel>();
 
@@ -53,13 +57,13 @@ namespace PresenterApp
             builder.Services.AddTransient<TagSelectionPage>();
             builder.Services.AddTransient<TagSelectionViewModel>();
 
-            // BookSummaryViewModel được tạo động, không cần đăng ký DI
-
             builder.Services.AddTransient<EditThemePage>();
             builder.Services.AddTransient<EditThemeViewModel>();
 
             builder.Services.AddTransient<EditStructurePage>();
             builder.Services.AddTransient<EditStructureViewModel>();
+
+            builder.Services.AddTransient<Views.Controls.ContentSearchSharedView>();
 
             return builder.Build();
         }

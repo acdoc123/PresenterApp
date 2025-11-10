@@ -14,6 +14,7 @@ namespace PresenterApp.ViewModels
     public partial class EditBookViewModel : BaseViewModel
     {
         private readonly DataAccessService _dataAccess;
+        private readonly FilterStateService _filterStateService; // Cần cho VM con
 
         [ObservableProperty]
         Book currentBook;
@@ -41,38 +42,23 @@ namespace PresenterApp.ViewModels
 
         public ObservableCollection<FieldType> FieldTypes { get; } = new(System.Enum.GetValues(typeof(FieldType)).Cast<FieldType>());
 
-        // --- Logic Lọc/Tìm kiếm ---
         [ObservableProperty]
-        string contentSearchText = string.Empty;
-
-        // Danh sách đầy đủ
-        private List<ContentEntryViewModel> _allContentEntries = new();
-
-        // Danh sách đã lọc để hiển thị
-        [ObservableProperty]
-        ObservableCollection<ContentEntryViewModel> filteredContentEntries = new();
-
-        [ObservableProperty]
-        ObservableCollection<AttributeDefinition> filterAttributes = new();
-
-        [ObservableProperty]
-        AttributeDefinition selectedAttribute;
-
-        [ObservableProperty]
-        bool isExactSearch = false;
-
-        // Biến tạm để lưu tất cả thuộc tính (dùng cho việc tải tóm tắt)
-        private List<AttributeDefinition> _allAttributesForBook = new();
+        ContentSearchSharedViewModel contentSearchVM;
 
         [ObservableProperty]
         bool isEditingBookDetails;
 
-        public EditBookViewModel(DataAccessService dataAccess)
+        public EditBookViewModel(DataAccessService dataAccess, FilterStateService filterStateService)
         {
             _dataAccess = dataAccess;
+            _filterStateService = filterStateService; // Lưu lại
+
+            ContentSearchVM = new ContentSearchSharedViewModel(_dataAccess, _filterStateService);
+            ContentSearchVM.ShowBookTypeFilter = false;
+            ContentSearchVM.ShowBookFilter = false;
         }
 
-        public void Initialize(Book book)
+        public async void Initialize(Book book)
         {
             CurrentBook = book;
             if (book.Id == 0)
@@ -85,13 +71,13 @@ namespace PresenterApp.ViewModels
                 Title = CurrentBook.Name;
                 IsEditingBookDetails = false;
             }
+            // Cấu hình VM con với bối cảnh là sách này
+            await ContentSearchVM.InitializeAsync(CurrentBook);
         }
 
         [RelayCommand]
         async Task LoadDataAsync()
         {
-            //if (IsBusy) return;
-            //IsBusy = true;
             try
             {
                 BookTypes.Clear();
@@ -116,9 +102,10 @@ namespace PresenterApp.ViewModels
                 if (CurrentBook.Id != 0)
                 {
                     SelectedBookType = BookTypes.FirstOrDefault(b => b.Id == CurrentBook.BookTypeId);
-                    // Tải thuộc tính VÀO BỘ LỌC
-                    await LoadAttributesForFilterAsync();
-                    await ExecuteContentSearchCommand.ExecuteAsync(null);
+                    // Tải thuộc tính (cho phần chỉnh sửa thuộc tính riêng)
+                    await LoadPrivateAttributesAsync();
+                    // Tải lại nội dung bằng VM con
+                    await ContentSearchVM.ExecuteSearchAsync();
                 }
             }
             finally
@@ -126,27 +113,13 @@ namespace PresenterApp.ViewModels
                 //IsBusy = false;
             }
         }
-        async Task LoadAttributesForFilterAsync()
-        {
-            await LoadPrivateAttributesAsync();
-
-            _allAttributesForBook = CommonAttributes.Concat(PrivateAttributes).ToList();
-
-            FilterAttributes.Clear();
-            FilterAttributes.Add(new AttributeDefinition { Id = 0, Name = "Tất cả Thuộc tính" });
-            foreach (var attr in _allAttributesForBook)
-            {
-                FilterAttributes.Add(attr);
-            }
-            SelectedAttribute = FilterAttributes.FirstOrDefault();
-        }
 
         partial void OnSelectedBookTypeChanged(BookType value)
         {
             LoadCommonAttributesAsync();
         }
 
-        async Task LoadCommonAttributesAsync()
+        async Task LoadCommonAttributesAsync()  
         {
             CommonAttributes.Clear();
             if (SelectedBookType == null) return;
@@ -160,59 +133,6 @@ namespace PresenterApp.ViewModels
             PrivateAttributes.Clear();
             var attributes = await _dataAccess.GetAttributesForBookAsync(CurrentBook.Id);
             foreach (var attr in attributes) PrivateAttributes.Add(attr);
-        }
-        [RelayCommand]
-        async Task ExecuteContentSearchAsync()
-        {
-            if (CurrentBook.Id == 0) return;
-            if (IsBusy) return;
-
-            IsBusy = true;
-            try
-            {
-                // 1. Lấy các giá trị bộ lọc
-                int? attributeId = (SelectedAttribute?.Id == 0) ? null : SelectedAttribute?.Id;
-                // (Bạn có thể thêm tagIds ở đây nếu muốn)
-                List<int> tagIds = new List<int>();
-
-                // 2. Gọi DataAccessService
-                var matchingEntries = await _dataAccess.SearchContentEntriesAsync(
-                    ContentSearchText,
-                    IsExactSearch,
-                    null,             // bookTypeId = null (đã ở trong sách)
-                    CurrentBook.Id,   // bookId = ID sách hiện tại
-                    attributeId,
-                    tagIds
-                );
-
-                // 3. Chuyển đổi kết quả sang ViewModel
-                FilteredContentEntries.Clear();
-
-                // Đảm bảo _allAttributesForBook đã được tải
-                if (!_allAttributesForBook.Any())
-                {
-                    await LoadAttributesForFilterAsync();
-                }
-
-                var loadTasks = new List<Task>();
-                foreach (var entry in matchingEntries)
-                {
-                    var vm = new ContentEntryViewModel(entry);
-                    loadTasks.Add(vm.LoadSummaryAsync(_dataAccess, _allAttributesForBook)); // Tải tóm tắt
-                    FilteredContentEntries.Add(vm);
-                }
-                // Chờ tất cả tóm tắt tải xong
-                await Task.WhenAll(loadTasks);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Lỗi tìm kiếm nội dung: {ex.Message}");
-                await Shell.Current.DisplayAlert("Lỗi", "Không thể thực hiện tìm kiếm.", "OK");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
         }
 
         [RelayCommand]
@@ -336,8 +256,8 @@ namespace PresenterApp.ViewModels
             if (confirm)
             {
                 await _dataAccess.DeleteContentEntryAsync(entryVM.Entry);
-                _allContentEntries.Remove(entryVM); // Xóa khỏi danh sách master
-                await ExecuteContentSearchAsync(); // Lọc lại danh sách hiển thị
+                // Tải lại danh sách bằng cách gọi lệnh của VM con
+                await ContentSearchVM.ExecuteSearchAsync();
             }
         }
     }

@@ -3,6 +3,7 @@
     x:Class="PresenterApp.Views.EditBookPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:PresenterApp.Views.Controls"
     xmlns:model="clr-namespace:PresenterApp.Models"
     xmlns:vm="clr-namespace:PresenterApp.ViewModels"
     Title="{Binding Title}"
@@ -11,143 +12,8 @@
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="10">
 
-            <VerticalStackLayout IsVisible="{Binding IsEditingBookDetails}" Spacing="10">
+            <VerticalStackLayout IsVisible="{Binding IsEditingBookDetails}" Spacing="10" />
 
-                <Label FontAttributes="Bold" Text="Tên Sách" />
-                <Entry Placeholder="Nhập tên sách..." Text="{Binding CurrentBook.Name}" />
-
-                <Label FontAttributes="Bold" Text="Loại Sách" />
-                <Picker
-                    ItemDisplayBinding="{Binding Name}"
-                    ItemsSource="{Binding BookTypes}"
-                    SelectedItem="{Binding SelectedBookType}" />
-
-                <Label FontAttributes="Bold" Text="Tags" />
-                <Grid ColumnDefinitions="*,Auto">
-                    <CollectionView
-                        Grid.Column="0"
-                        ItemsSource="{Binding SelectedTags}"
-                        SelectionMode="None">
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="model:Tag">
-                                <Frame
-                                    Margin="0,0,5,5"
-                                    Padding="8,5"
-                                    BorderColor="Gray"
-                                    CornerRadius="8">
-                                    <HorizontalStackLayout Spacing="5">
-                                        <Label Text="{Binding Name}" VerticalOptions="Center" />
-                                        <Button
-                                            Padding="0"
-                                            BackgroundColor="Transparent"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=RemoveTagFromBookCommand}"
-                                            CommandParameter="{Binding}"
-                                            HeightRequest="20"
-                                            Text="x"
-                                            TextColor="Gray"
-                                            WidthRequest="20" />
-                                    </HorizontalStackLayout>
-                                </Frame>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                        <CollectionView.ItemsLayout>
-                            <GridItemsLayout Orientation="Vertical" Span="3" />
-                        </CollectionView.ItemsLayout>
-                    </CollectionView>
-
-                    <Button
-                        Grid.Column="1"
-                        Command="{Binding OpenTagSelectionModalCommand}"
-                        CornerRadius="25"
-                        FontSize="Large"
-                        HeightRequest="45"
-                        Text="+"
-                        VerticalOptions="Start"
-                        WidthRequest="45" />
-                </Grid>
-
-                <Button
-                    Command="{Binding SaveBookCommand}"
-                    HorizontalOptions="Fill"
-                    Text="Lưu Sách" />
-                <Button
-                    BackgroundColor="Red"
-                    Command="{Binding DeleteBookCommand}"
-                    HorizontalOptions="Fill"
-                    IsVisible="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
-                    Text="Xóa Sách" />
-
-                <Label
-                    Margin="0,20,0,0"
-                    FontAttributes="Bold"
-                    FontSize="Medium"
-                    Text="Thuộc tính" />
-
-                <CollectionView ItemsSource="{Binding CommonAttributes}" SelectionMode="None">
-                    <CollectionView.Header>
-                        <Label FontAttributes="Italic" Text="Thuộc tính chung (từ Loại Sách):" />
-                    </CollectionView.Header>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="model:AttributeDefinition">
-                            <Grid Padding="0,5" ColumnDefinitions="*,*">
-                                <Label Grid.Column="0" Text="{Binding Name}" />
-                                <Label
-                                    Grid.Column="1"
-                                    Text="{Binding Type}"
-                                    TextColor="Gray" />
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-
-                <Label
-                    Margin="0,10,0,0"
-                    FontAttributes="Italic"
-                    Text="Thuộc tính riêng:" />
-                <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="5">
-                    <Entry
-                        Grid.Column="0"
-                        Placeholder="Tên thuộc tính"
-                        Text="{Binding NewAttributeName}" />
-                    <Picker
-                        Title="Kiểu dữ liệu"
-                        Grid.Column="1"
-                        ItemsSource="{Binding FieldTypes}"
-                        SelectedItem="{Binding NewAttributeType}" />
-                    <Button
-                        Grid.Column="2"
-                        Command="{Binding AddPrivateAttributeCommand}"
-                        Text="Thêm" />
-                </Grid>
-
-                <CollectionView
-                    Margin="0,10,0,0"
-                    ItemsSource="{Binding PrivateAttributes}"
-                    SelectionMode="None">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="model:AttributeDefinition">
-                            <Grid Padding="0,5" ColumnDefinitions="*,*,Auto">
-                                <Label
-                                    Grid.Column="0"
-                                    Text="{Binding Name}"
-                                    VerticalOptions="Center" />
-                                <Label
-                                    Grid.Column="1"
-                                    Text="{Binding Type}"
-                                    VerticalOptions="Center" />
-                                <Button
-                                    Grid.Column="2"
-                                    BackgroundColor="Transparent"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=DeleteAttributeCommand}"
-                                    CommandParameter="{Binding}"
-                                    Text="Xóa"
-                                    TextColor="Red" />
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-
-            </VerticalStackLayout>
             <Button
                 Margin="0,0,0,10"
                 Command="{Binding ToggleEditModeCommand}"
@@ -155,7 +21,6 @@
                 IsEnabled="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
                 IsVisible="{Binding IsEditingBookDetails, Converter={StaticResource InvertedBoolConverter}}"
                 Text="Sửa thông tin sách" />
-
 
             <BoxView
                 Margin="0,10"
@@ -166,28 +31,6 @@
                 FontAttributes="Bold"
                 FontSize="Medium"
                 Text="Nội dung Sách" />
-
-            <SearchBar
-                Grid.Row="5"
-                IsEnabled="{Binding CurrentBook.Id, Converter={StaticResource IntToBoolConverter}}"
-                Placeholder="Lọc nội dung theo thuộc tính..."
-                SearchCommand="{Binding ExecuteContentSearchCommand}"
-                Text="{Binding ContentSearchText}" />
-            <Grid
-                Padding="0,0,0,10"
-                ColumnDefinitions="*,Auto"
-                ColumnSpacing="10">
-                <Picker
-                    Title="Lọc theo Thuộc tính"
-                    Grid.Column="0"
-                    ItemDisplayBinding="{Binding Name}"
-                    ItemsSource="{Binding FilterAttributes}"
-                    SelectedItem="{Binding SelectedAttribute}" />
-                <HorizontalStackLayout Grid.Column="1" VerticalOptions="Center">
-                    <CheckBox IsChecked="{Binding IsExactSearch}" />
-                    <Label Text="Chính xác" VerticalOptions="Center" />
-                </HorizontalStackLayout>
-            </Grid>
 
             <Button
                 Command="{Binding AddContentEntryCommand}"
@@ -200,135 +43,95 @@
                 Text="Lưu sách trước khi thêm nội dung"
                 TextColor="Gray" />
 
-            <CollectionView
-                Margin="0,10,0,0"
-                ItemsSource="{Binding FilteredContentEntries}"
-                SelectionMode="None">
-                <CollectionView.Header>
-                    <Label FontAttributes="Italic" Text="Các nội dung đã thêm:" />
-                </CollectionView.Header>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:ContentEntryViewModel">
+            <controls:ContentSearchSharedView BindingContext="{Binding ContentSearchVM}">
+                <controls:ContentSearchSharedView.Resources>
+                    <ResourceDictionary>
+                        <DataTemplate x:Key="OverriddenBookSummaryTemplate" x:DataType="vm:BookSummaryViewModel">
+                            <VerticalStackLayout Spacing="5">
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding ContentEntries}" IsVisible="True">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ContentEntryViewModel">
+                                            <VerticalStackLayout Padding="0,5" Spacing="5">
+                                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                                    <Grid
+                                                        Grid.Column="0"
+                                                        ColumnDefinitions="*,*"
+                                                        ColumnSpacing="10"
+                                                        VerticalOptions="Center">
+                                                        <Grid.GestureRecognizers>
+                                                            <TapGestureRecognizer Command="{Binding ToggleExpandCommand}" />
+                                                        </Grid.GestureRecognizers>
 
-                        <VerticalStackLayout Padding="0,5" Spacing="5">
+                                                        <Label
+                                                            Grid.Column="0"
+                                                            FontAttributes="Bold"
+                                                            LineBreakMode="TailTruncation"
+                                                            MaxLines="1"
+                                                            Text="{Binding SummaryText1}"
+                                                            VerticalOptions="Center" />
+                                                        <Label
+                                                            Grid.Column="1"
+                                                            FontSize="Small"
+                                                            LineBreakMode="TailTruncation"
+                                                            MaxLines="1"
+                                                            Text="{Binding SummaryText2}"
+                                                            TextColor="Gray"
+                                                            VerticalOptions="Center" />
+                                                    </Grid>
 
-                            <Grid ColumnDefinitions="*,Auto,Auto">
-                                <Grid
-                                    Grid.Column="0"
-                                    ColumnDefinitions="*,*"
-                                    ColumnSpacing="10"
-                                    VerticalOptions="Center">
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding ToggleExpandCommand}" />
-                                    </Grid.GestureRecognizers>
+                                                    <Button
+                                                        Grid.Column="1"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=EditContentEntryCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Text="Sửa" />
+                                                    <Button
+                                                        Grid.Column="2"
+                                                        BackgroundColor="Transparent"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=DeleteContentEntryCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Text="Xóa"
+                                                        TextColor="Red" />
+                                                </Grid>
 
-                                    <Label
-                                        Grid.Column="0"
-                                        FontAttributes="Bold"
-                                        LineBreakMode="TailTruncation"
-                                        MaxLines="1"
-                                        Text="{Binding SummaryText1}"
-                                        VerticalOptions="Center" />
-                                    <Label
-                                        Grid.Column="1"
-                                        FontSize="Small"
-                                        LineBreakMode="TailTruncation"
-                                        MaxLines="1"
-                                        Text="{Binding SummaryText2}"
-                                        TextColor="Gray"
-                                        VerticalOptions="Center" />
-                                </Grid>
-
-                                <Button
-                                    Grid.Column="1"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=EditContentEntryCommand}"
-                                    CommandParameter="{Binding}"
-                                    Text="Sửa" />
-                                <Button
-                                    Grid.Column="2"
-                                    BackgroundColor="Transparent"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:EditBookViewModel}}, Path=DeleteContentEntryCommand}"
-                                    CommandParameter="{Binding}"
-                                    Text="Xóa"
-                                    TextColor="Red" />
-                            </Grid>
-
-                            <VerticalStackLayout
-                                Margin="20,5,0,5"
-                                BindableLayout.ItemsSource="{Binding DetailedAttributes}"
-                                IsVisible="{Binding IsExpanded}"
-                                Spacing="8">
-
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:DynamicAttributeViewModel">
-                                        <VerticalStackLayout Spacing="3">
-
-                                            <Label
-                                                FontAttributes="Bold"
-                                                Text="{Binding DisplayName}"
-                                                TextColor="{StaticResource Primary}" />
-
-                                            <Label
-                                                IsVisible="{Binding FieldType, Converter={StaticResource IsNotFlexibleContentConverter}}"
-                                                LineBreakMode="WordWrap"
-                                                Text="{Binding StringValue}" />
-
-                                            <VerticalStackLayout
-                                                BindableLayout.ItemsSource="{Binding FlexibleContentList}"
-                                                IsVisible="{Binding FieldType, Converter={StaticResource IsFlexibleContentConverter}}"
-                                                Spacing="5">
-
-                                                <BindableLayout.ItemTemplate>
-                                                    <DataTemplate x:DataType="model:FlexibleContentBlock">
-                                                        <VerticalStackLayout Spacing="2">
-
-                                                            <VerticalStackLayout IsVisible="{Binding IsNamedText}">
-                                                                <Label FontAttributes="Bold" Text="{Binding Name}" />
-                                                                <Label LineBreakMode="WordWrap" Text="{Binding Content}" />
+                                                <VerticalStackLayout
+                                                    Margin="20,5,0,5"
+                                                    BindableLayout.ItemsSource="{Binding DetailedAttributes}"
+                                                    IsVisible="{Binding IsExpanded}"
+                                                    Spacing="8">
+                                                    <BindableLayout.ItemTemplate>
+                                                        <DataTemplate x:DataType="vm:DynamicAttributeViewModel">
+                                                            <VerticalStackLayout Spacing="3">
+                                                                <Label
+                                                                    FontAttributes="Bold"
+                                                                    Text="{Binding DisplayName}"
+                                                                    TextColor="{StaticResource Primary}" />
+                                                                <Label
+                                                                    IsVisible="{Binding FieldType, Converter={StaticResource IsNotFlexibleContentConverter}}"
+                                                                    LineBreakMode="WordWrap"
+                                                                    Text="{Binding StringValue}" />
                                                             </VerticalStackLayout>
-
-                                                            <Frame
-                                                                Margin="0,5"
-                                                                Padding="0"
-                                                                BorderColor="LightGray"
-                                                                HeightRequest="100"
-                                                                HorizontalOptions="Start"
-                                                                IsVisible="{Binding IsImage}"
-                                                                WidthRequest="150">
-                                                                <Image Aspect="AspectFill" Source="{Binding FilePath}" />
-                                                            </Frame>
-
-                                                            <Label
-                                                                FontAttributes="Italic"
-                                                                IsVisible="{Binding IsPdf}"
-                                                                TextColor="Gray">
-                                                                <Label.FormattedText>
-                                                                    <FormattedString>
-                                                                        <Span Text="PDF: " />
-                                                                        <Span Text="{Binding FileName}" />
-                                                                    </FormattedString>
-                                                                </Label.FormattedText>
-                                                            </Label>
-
-                                                        </VerticalStackLayout>
-                                                    </DataTemplate>
-                                                </BindableLayout.ItemTemplate>
+                                                        </DataTemplate>
+                                                    </BindableLayout.ItemTemplate>
+                                                </VerticalStackLayout>
+                                                <ActivityIndicator
+                                                    Margin="20,0,0,0"
+                                                    HorizontalOptions="Start"
+                                                    IsRunning="{Binding IsLoadingDetails}"
+                                                    IsVisible="{Binding IsLoadingDetails}" />
                                             </VerticalStackLayout>
-                                        </VerticalStackLayout>
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
+                        </DataTemplate>
 
-                            <ActivityIndicator
-                                Margin="20,0,0,0"
-                                HorizontalOptions="Start"
-                                IsRunning="{Binding IsLoadingDetails}"
-                                IsVisible="{Binding IsLoadingDetails}" />
-                        </VerticalStackLayout>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                        <Style TargetType="CollectionView">
+                            <Setter Property="ItemTemplate" Value="{StaticResource OverriddenBookSummaryTemplate}" />
+                        </Style>
 
+                    </ResourceDictionary>
+                </controls:ContentSearchSharedView.Resources>
+            </controls:ContentSearchSharedView>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
