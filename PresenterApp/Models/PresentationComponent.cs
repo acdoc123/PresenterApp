@@ -12,6 +12,6 @@ namespace PresenterApp.Models
         [Indexed]
         public int StructureId { get; set; } // Liên kết với PresentationStructure
         public string Name { get; set; } = string.Empty;
-        public int DisplayOrder { get; set; } // Để sắp xếp
+        public int DisplayOrder { get; set; }
     }
 }
