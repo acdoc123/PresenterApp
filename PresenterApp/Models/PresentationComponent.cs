@@ -1,5 +1,6 @@
 ﻿// File: Models/PresentationComponent.cs
 using SQLite;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PresenterApp.Models
 {

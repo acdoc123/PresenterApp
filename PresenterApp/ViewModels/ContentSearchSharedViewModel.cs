@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace PresenterApp.ViewModels
 {
     // Đây là ViewModel cho logic tìm kiếm có thể tái sử dụng
-    public partial class ContentSearchSharedViewModel : BaseViewModel
+    public partial class ContentSearchSharedViewModel : BaseViewModel, IQueryAttributable
     {
         private readonly DataAccessService _dataAccess;
         private readonly FilterStateService _filterStateService;
@@ -63,6 +63,14 @@ namespace PresenterApp.ViewModels
         [ObservableProperty]
         bool showBookFilter = true;
 
+        [ObservableProperty]
+        bool isSelectionMode = false;
+
+        // Biến tạm để lưu ID bộ lọc được truyền vào
+        private int _passedBookTypeId = 0;
+        private int _passedBookId = 0;
+        private int _passedTagId = 0;
+
         // --- Bối cảnh (nếu dùng trong EditBookPage) ---
         private Book? _specificBookContext = null;
 
@@ -71,6 +79,32 @@ namespace PresenterApp.ViewModels
             _dataAccess = dataAccess;
             _filterStateService = filterStateService;
             Title = "Lọc và Tìm kiếm";
+        }
+
+        public void ApplyQueryAttributes(IDictionary<string, object> query)
+        {
+            if (query.TryGetValue("IsSelectionMode", out var isSelectionMode))
+            {
+                IsSelectionMode = bool.Parse(isSelectionMode.ToString());
+            }
+
+            if (query.TryGetValue("BookTypeId", out var btId) && int.TryParse(btId.ToString(), out int parsedBtId))
+            {
+                _passedBookTypeId = parsedBtId;
+            }
+
+            if (query.TryGetValue("BookId", out var bId) && int.TryParse(bId.ToString(), out int parsedBId))
+            {
+                _passedBookId = parsedBId;
+            }
+
+            if (query.TryGetValue("TagId", out var tId) && int.TryParse(tId.ToString(), out int parsedTId))
+            {
+                _passedTagId = parsedTId;
+            }
+
+            // Các giá trị _passed...Id này sẽ được sử dụng bởi
+            // phương thức LoadGeneralFiltersAsync()
         }
 
         public async Task InitializeAsync(Book? specificBookContext = null)
@@ -129,8 +163,29 @@ namespace PresenterApp.ViewModels
                 }
                 _allAttributes = _allAttributes.GroupBy(ad => ad.Name).Select(g => g.First()).ToList();
 
-                SelectedBookType = allBookTypesOption;
-                OnSelectedBookTypeChanged(allBookTypesOption);
+                // Áp dụng bộ lọc được truyền vào (nếu có)
+                var bookTypeToSelect = allBookTypesOption;
+                if (_passedBookTypeId > 0)
+                {
+                    bookTypeToSelect = filterBookTypes.FirstOrDefault(bt => bt.Id == _passedBookTypeId) ?? allBookTypesOption;
+                }
+
+                SelectedBookType = bookTypeToSelect;
+                OnSelectedBookTypeChanged(bookTypeToSelect); // Tải danh sách sách
+
+                // Áp dụng bộ lọc Sách (nếu có)
+                if (_passedBookId > 0)
+                {
+                    // FilterBooks đã được nạp bởi OnSelectedBookTypeChanged
+                    SelectedBook = FilterBooks.FirstOrDefault(b => b.Id == _passedBookId);
+                }
+
+                // (Bạn có thể thêm logic cho _passedTagId tại đây nếu cần)
+
+                // Reset lại các ID đã qua
+                _passedBookTypeId = 0;
+                _passedBookId = 0;
+                _passedTagId = 0;
             }
             finally
             {
@@ -298,6 +353,20 @@ namespace PresenterApp.ViewModels
             {
                 IsBusySearching = false;
             }
+        }
+        [RelayCommand]
+        async Task SelectContent(ContentEntryViewModel contentEntryVM)
+        {
+            if (contentEntryVM == null) return;
+
+            // Tạo tham số để trả về trang trước (CreatePresentationPage)
+            var navParams = new ShellNavigationQueryParameters
+            {
+                { "SelectedContentEntryId", contentEntryVM.Entry.Id }
+            };
+
+            // Quay lại trang trước
+            await Shell.Current.GoToAsync("..", navParams);
         }
     }
 }

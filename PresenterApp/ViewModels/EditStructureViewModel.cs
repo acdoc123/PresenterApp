@@ -2,8 +2,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PresenterApp.Models;
-using PresenterApp.Services;
 using System.Collections.ObjectModel;
+using PresenterApp.Services;
 using System.Threading.Tasks;
 using System.Linq;
 
@@ -21,6 +21,15 @@ namespace PresenterApp.ViewModels
 
         [ObservableProperty]
         string newComponentName;
+
+        [ObservableProperty]
+        ObservableCollection<BookType> allBookTypes = new();
+
+        [ObservableProperty]
+        ObservableCollection<Book> allBooks = new();
+
+        [ObservableProperty]
+        ObservableCollection<Tag> allTags = new();
 
         public EditStructureViewModel(DataAccessService dataAccess)
         {
@@ -47,6 +56,31 @@ namespace PresenterApp.ViewModels
             foreach (var item in items)
             {
                 Components.Add(new PresentationComponentViewModel(item));
+            }
+            await LoadFiltersAsync();
+        }
+        async Task LoadFiltersAsync()
+        {
+            try
+            {
+                var bookTypes = await _dataAccess.GetAllAsync<BookType>();
+                var books = await _dataAccess.GetAllAsync<Book>();
+                var tags = await _dataAccess.GetAllAsync<Tag>();
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    AllBookTypes.Clear();
+                    AllBooks.Clear();
+                    AllTags.Clear();
+
+                    foreach (var bt in bookTypes.OrderBy(t => t.Name)) AllBookTypes.Add(bt);
+                    foreach (var b in books.OrderBy(t => t.Title)) AllBooks.Add(b);
+                    foreach (var t in tags.OrderBy(t => t.Name)) AllTags.Add(t);
+                });
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Lỗi", $"Không thể tải danh sách bộ lọc: {ex.Message}", "OK");
             }
         }
 

@@ -56,7 +56,34 @@
                                         FontSize="Medium"
                                         Text="{Binding ComponentName}"
                                         VerticalOptions="Center" />
+                                    <Grid
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="6"
+                                        Padding="0,10,0,0"
+                                        ColumnDefinitions="*,*,*"
+                                        ColumnSpacing="10">
+                                        <Picker
+                                            Title="Lọc theo Thể loại sách"
+                                            Grid.Column="0"
+                                            ItemDisplayBinding="{Binding Name}"
+                                            ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:EditStructureViewModel}}, Path=AllBookTypes}"
+                                            SelectedItem="{Binding BookType}" />
 
+                                        <Picker
+                                            Title="Lọc theo Sách"
+                                            Grid.Column="1"
+                                            ItemDisplayBinding="{Binding Title}"
+                                            ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:EditStructureViewModel}}, Path=AllBooks}"
+                                            SelectedItem="{Binding Book}" />
+
+                                        <Picker
+                                            Title="Lọc theo Tag"
+                                            Grid.Column="2"
+                                            ItemDisplayBinding="{Binding Name}"
+                                            ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:EditStructureViewModel}}, Path=AllTags}"
+                                            SelectedItem="{Binding Tag}" />
+                                    </Grid>
                                     <Button
                                         Grid.Column="2"
                                         BackgroundColor="Transparent"
