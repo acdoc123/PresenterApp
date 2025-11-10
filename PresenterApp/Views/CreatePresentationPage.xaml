@@ -6,72 +6,87 @@
     xmlns:vm="clr-namespace:PresenterApp.ViewModels"
     Title="Tạo file trình chiếu"
     x:DataType="vm:CreatePresentationViewModel">
-    <ScrollView>
-        <VerticalStackLayout Padding="10" Spacing="15">
+    <VerticalStackLayout Padding="10" Spacing="15">
 
-            <Grid
-                ColumnDefinitions="Auto,*,Auto"
-                ColumnSpacing="10"
-                VerticalOptions="Center">
-                <Label
-                    Grid.Column="0"
-                    FontAttributes="Bold"
-                    Text="Giao diện chủ đề:"
-                    VerticalOptions="Center" />
-                <Picker
-                    Grid.Column="1"
-                    ItemDisplayBinding="{Binding Name}"
-                    ItemsSource="{Binding PresentationThemes}"
-                    SelectedItem="{Binding SelectedTheme}"
-                    VerticalOptions="Center" />
-                <Button
-                    Grid.Column="2"
-                    Command="{Binding GoToEditThemeCommand}"
-                    FontAttributes="Bold"
-                    Text="⚙"
-                    VerticalOptions="Center"
-                    WidthRequest="50" />
-            </Grid>
+        <Picker
+            Title="Chọn chủ đề"
+            ItemDisplayBinding="{Binding Name}"
+            ItemsSource="{Binding Themes}"
+            SelectedItem="{Binding SelectedTheme}" />
 
-            <Grid
-                ColumnDefinitions="Auto,*,Auto"
-                ColumnSpacing="10"
-                VerticalOptions="Center">
-                <Label
-                    Grid.Column="0"
-                    FontAttributes="Bold"
-                    Text="Cấu trúc Trình chiếu:"
-                    VerticalOptions="Center" />
-                <Picker
-                    Grid.Column="1"
-                    ItemDisplayBinding="{Binding Name}"
-                    ItemsSource="{Binding PresentationStructures}"
-                    SelectedItem="{Binding SelectedStructure}"
-                    VerticalOptions="Center" />
-                <Button
-                    Grid.Column="2"
-                    Command="{Binding GoToEditStructureCommand}"
-                    FontAttributes="Bold"
-                    Text="⚙"
-                    VerticalOptions="Center"
-                    WidthRequest="50" />
-            </Grid>
+        <Picker
+            Title="Chọn cấu trúc trình chiếu"
+            ItemDisplayBinding="{Binding Name}"
+            ItemsSource="{Binding Structures}"
+            SelectedItem="{Binding SelectedStructure}" />
 
-            <BoxView
-                Margin="0,10"
-                HeightRequest="1"
-                Color="{StaticResource Gray200}" />
+        <Line
+            Margin="0,10"
+            Stroke="LightGray"
+            StrokeThickness="1" />
+        <ScrollView>
 
-            <Button
-                HorizontalOptions="Fill"
-                IsEnabled="False"
-                Text="Tạo file PPTX (Demo)" />
             <Label
-                FontSize="Small"
-                HorizontalTextAlignment="Center"
-                Text="*Chọn Giao diện và Cấu trúc để tạo file"
-                TextColor="{StaticResource Gray500}" />
+                FontAttributes="Bold"
+                FontSize="Title"
+                Text="Tạo Slide" />
 
-        </VerticalStackLayout>
-    </ScrollView>
+            <CollectionView IsVisible="{Binding IsStructureSelected}" ItemsSource="{Binding StructureComponents}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewmodels:PresentationComponentViewModel">
+                        <Frame Margin="0,5" Padding="10">
+                            <VerticalStackLayout Spacing="5">
+
+                                <HorizontalStackLayout VerticalOptions="Center">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="Large"
+                                        Text="{Binding Component.Name}"
+                                        VerticalOptions="Center" />
+                                    <Button
+                                        Margin="10,0,0,0"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CreatePresentationViewModel}}, Path=AddContentToComponentCommand}"
+                                        CommandParameter="{Binding .}"
+                                        CornerRadius="20"
+                                        FontAttributes="Bold"
+                                        FontSize="Large"
+                                        HeightRequest="40"
+                                        Text="+"
+                                        WidthRequest="40" />
+                                </HorizontalStackLayout>
+
+                                <CollectionView Margin="20,0,0,0" ItemsSource="{Binding ContentBlocks}">
+                                    <CollectionView.ItemTemplate>
+                                        <DataTemplate x:DataType="models:FlexibleContentBlock">
+                                            <Label Padding="5" Text="{Binding ContentEntry.Name}" />
+                                        </DataTemplate>
+                                    </CollectionView.ItemTemplate>
+                                </CollectionView>
+
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <VerticalStackLayout IsVisible="{Binding IsStructureSelected, Converter={StaticResource InvertedBoolConverter}}" Spacing="5">
+
+                <Button
+                    Command="{Binding AddFreeSlideCommand}"
+                    FontAttributes="Bold"
+                    Text="+ Thêm Slide" />
+
+                <CollectionView ItemsSource="{Binding FreeSlides}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:FlexibleContentBlock">
+                            <Frame Margin="0,2" Padding="5">
+                                <Label Text="{Binding ContentEntry.Name}" />
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </VerticalStackLayout>
 </ContentPage>
