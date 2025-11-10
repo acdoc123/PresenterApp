@@ -4,30 +4,51 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:PresenterApp"
+    xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.SegmentedControl;assembly=Syncfusion.Maui.Toolkit"
     xmlns:views="clr-namespace:PresenterApp.Views"
     Title="PresenterApp"
-    Shell.FlyoutBehavior="Disabled">
+    Shell.FlyoutBehavior="Flyout">
+    <ShellContent
+        Title="Tạo PPTX"
+        ContentTemplate="{DataTemplate views:CreatePresentationPage}"
+        Icon="{StaticResource IconCreate}"
+        Route="CreatePresentationPage" />
 
-    <TabBar>
-        <ShellContent
-            Title="Tạo PPTX"
-            ContentTemplate="{DataTemplate views:CreatePresentationPage}"
-            Route="CreatePresentationPage" />
+    <ShellContent
+        Title="Nội dung"
+        ContentTemplate="{DataTemplate views:ContentSearchPage}"
+        Icon="{StaticResource IconSearch}"
+        Route="ContentSearchPage" />
 
-        <ShellContent
-            Title="Nội dung"
-            ContentTemplate="{DataTemplate views:ContentSearchPage}"
-            Route="ContentSearchPage" />
+    <ShellContent
+        Title="Quản lý"
+        ContentTemplate="{DataTemplate views:ManagementDashboardPage}"
+        Icon="{StaticResource IconManage}"
+        Route="ManagementDashboardPage" />
 
-        <ShellContent
-            Title="Quản lý"
-            ContentTemplate="{DataTemplate views:ManagementDashboardPage}"
-            Route="ManagementDashboardPage" />
+    <ShellContent
+        Title="Cài đặt"
+        ContentTemplate="{DataTemplate views:SettingsPage}"
+        Icon="{StaticResource IconSettings}"
+        Route="SettingsPage" />
 
-        <ShellContent
-            Title="Cài đặt"
-            ContentTemplate="{DataTemplate views:SettingsPage}"
-            Route="SettingsPage" />
-    </TabBar>
+    <Shell.FlyoutFooter>
+        <Grid Padding="15">
+            <sf:SfSegmentedControl
+                x:Name="ThemeSegmentedControl"
+                HorizontalOptions="Center"
+                SegmentHeight="40"
+                SegmentWidth="40"
+                SelectionChanged="SfSegmentedControl_SelectionChanged"
+                VerticalOptions="Center">
+                <sf:SfSegmentedControl.ItemsSource>
+                    <x:Array Type="{x:Type sf:SfSegmentItem}">
+                        <sf:SfSegmentItem ImageSource="{StaticResource IconLight}" />
+                        <sf:SfSegmentItem ImageSource="{StaticResource IconDark}" />
+                    </x:Array>
+                </sf:SfSegmentedControl.ItemsSource>
+            </sf:SfSegmentedControl>
+        </Grid>
+    </Shell.FlyoutFooter>
 
 </Shell>

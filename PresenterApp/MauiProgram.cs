@@ -4,7 +4,7 @@ using PresenterApp.Services;
 using PresenterApp.ViewModels;
 using PresenterApp.Views;
 using CommunityToolkit.Maui;
-
+using Syncfusion.Maui.Toolkit.Hosting;
 namespace PresenterApp
 {
     public static class MauiProgram
@@ -15,10 +15,13 @@ namespace PresenterApp
             builder
                .UseMauiApp<App>()
                .UseMauiCommunityToolkit()
+               .ConfigureSyncfusionToolkit()
                .ConfigureFonts(fonts =>
                {
                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                   fonts.AddFont("SegoeUI-Semibold.ttf", "SegoeSemibold");
+                   fonts.AddFont("FluentSystemIcons-Regular.ttf", FluentUI.FontFamily);
                });
 
 #if DEBUG
