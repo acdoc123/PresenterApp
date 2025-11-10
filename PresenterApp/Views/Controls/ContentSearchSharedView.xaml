@@ -54,10 +54,12 @@
                 BorderColor="LightGray"
                 CornerRadius="5"
                 HeightRequest="50">
+
                 <ScrollView Orientation="Horizontal">
                     <HorizontalStackLayout BindableLayout.ItemsSource="{Binding FilterTags}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="model:Tag">
+
                                 <Frame
                                     Margin="0,0,5,0"
                                     Padding="8,5"
@@ -67,6 +69,7 @@
                                 </Frame>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
+
                     </HorizontalStackLayout>
                 </ScrollView>
             </Frame>
@@ -84,6 +87,7 @@
             SearchCommand="{Binding ExecuteSearchCommand}"
             Text="{Binding SearchText}" />
 
+
         <BoxView
             Grid.Row="5"
             HeightRequest="1"
@@ -100,13 +104,16 @@
             <CollectionView ItemsSource="{Binding SearchResults}" SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:BookSummaryViewModel">
+
                         <VerticalStackLayout Padding="10" Spacing="5">
                             <Grid ColumnDefinitions="*,Auto">
                                 <Grid.GestureRecognizers>
+
                                     <TapGestureRecognizer Command="{Binding ToggleExpandCommand}" />
                                 </Grid.GestureRecognizers>
 
                                 <Label Grid.Column="0" VerticalOptions="Center">
+
                                     <Label.FormattedText>
                                         <FormattedString>
                                             <Span
@@ -114,13 +121,16 @@
                                                 FontSize="Large"
                                                 Text="{Binding Book.Name}" />
                                             <Span Text=" (" />
+
                                             <Span
                                                 FontAttributes="Italic"
                                                 Text="{Binding ResultCountText}"
                                                 TextColor="Gray" />
+
                                             <Span Text=")" />
                                         </FormattedString>
                                     </Label.FormattedText>
+
                                 </Label>
                             </Grid>
 
@@ -128,18 +138,23 @@
                                 Margin="20,0,0,0"
                                 BindableLayout.ItemsSource="{Binding ContentEntries}"
                                 IsVisible="{Binding IsExpanded}">
+
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="vm:ContentEntryViewModel">
                                         <VerticalStackLayout Padding="0,5" Spacing="5">
+
                                             <Grid ColumnDefinitions="*,Auto,Auto">
                                                 <Grid
                                                     Grid.Column="0"
                                                     ColumnDefinitions="*,*"
                                                     ColumnSpacing="10"
                                                     VerticalOptions="Center">
+
                                                     <Grid.GestureRecognizers>
+
                                                         <TapGestureRecognizer Command="{Binding ToggleExpandCommand}" />
                                                     </Grid.GestureRecognizers>
+
                                                     <Label
                                                         Grid.Column="0"
                                                         FontAttributes="Bold"
@@ -147,6 +162,7 @@
                                                         MaxLines="1"
                                                         Text="{Binding SummaryText1}"
                                                         VerticalOptions="Center" />
+
                                                     <Label
                                                         Grid.Column="1"
                                                         FontSize="Small"
@@ -155,8 +171,21 @@
                                                         Text="{Binding SummaryText2}"
                                                         TextColor="Gray"
                                                         VerticalOptions="Center" />
+
                                                 </Grid>
+
+                                                <Button
+                                                    Grid.Column="1"
+                                                    Margin="5,0"
+                                                    Padding="10,5"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ContentSearchSharedViewModel}}, Path=SelectContentCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    IsEnabled="{Binding IsLoadingDetails, Converter={StaticResource InvertedBoolConverter}}"
+                                                    IsVisible="{Binding Source={RelativeSource AncestorType={x:Type vm:ContentSearchSharedViewModel}}, Path=IsSelectionMode}"
+                                                    Text="Chọn"
+                                                    VerticalOptions="Center" />
                                             </Grid>
+
 
                                             <VerticalStackLayout
                                                 Margin="20,5,0,5"
@@ -164,28 +193,35 @@
                                                 IsVisible="{Binding IsExpanded}"
                                                 Spacing="8">
                                                 <BindableLayout.ItemTemplate>
+
                                                     <DataTemplate x:DataType="vm:DynamicAttributeViewModel">
                                                         <VerticalStackLayout Spacing="3">
+
                                                             <Label
                                                                 FontAttributes="Bold"
                                                                 Text="{Binding DisplayName}"
                                                                 TextColor="{StaticResource Primary}" />
                                                         </VerticalStackLayout>
+
                                                     </DataTemplate>
                                                 </BindableLayout.ItemTemplate>
+
                                             </VerticalStackLayout>
                                             <ActivityIndicator
                                                 Margin="20,0,0,0"
                                                 HorizontalOptions="Start"
                                                 IsRunning="{Binding IsLoadingDetails}"
                                                 IsVisible="{Binding IsLoadingDetails}" />
+
                                         </VerticalStackLayout>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
+
                             </VerticalStackLayout>
                             <BoxView HeightRequest="1" Color="{StaticResource Gray100}" />
                         </VerticalStackLayout>
                     </DataTemplate>
+
                 </CollectionView.ItemTemplate>
             </CollectionView>
         </ScrollView>
