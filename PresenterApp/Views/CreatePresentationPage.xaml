@@ -64,12 +64,13 @@
 
             <Button
                 HorizontalOptions="Fill"
-                IsEnabled="False"
-                Text="Tạo file PPTX (Demo)" />
+                Command="{Binding GoToPresentationBuilderCommand}"
+                Text="Tiếp tục: Biên tập Nội dung >>"
+                FontAttributes="Bold" />
             <Label
                 FontSize="Small"
                 HorizontalTextAlignment="Center"
-                Text="*Chọn Giao diện và Cấu trúc để tạo file"
+                Text="*Bước tiếp theo: Chọn nội dung và chỉnh sửa slide"
                 TextColor="{StaticResource Gray500}" />
 
         </VerticalStackLayout>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="PresenterApp.Views.PresentationBuilderPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:PresenterApp.Models"
+    xmlns:vm="clr-namespace:PresenterApp.ViewModels"
+    xmlns:converters="clr-namespace:PresenterApp.Converters"
+    Title="{Binding Title}"
+    x:DataType="vm:PresentationBuilderViewModel">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid ColumnDefinitions="250,*,300">
+        <!--  COLUMN 1: Outline (List of Items)  -->
+        <Grid
+            Grid.Column="0"
+            Padding="5"
+            BackgroundColor="{StaticResource Gray100}"
+            RowDefinitions="*,Auto">
+
+            <CollectionView
+                Grid.Row="0"
+                ItemsSource="{Binding Items}"
+                SelectedItem="{Binding SelectedItem}"
+                SelectionMode="Single">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:PresentationSlideItem">
+                        <Grid Padding="10">
+                            <Label LineBreakMode="TailTruncation" Text="{Binding Content}" />
+                            <!--  Hiển thị tên Component nếu có  -->
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="10"
+                                IsVisible="{Binding SourceComponent, Converter={StaticResource IsNotNullConverter}}"
+                                Text="{Binding SourceComponent.Name}"
+                                TextColor="{StaticResource Primary}"
+                                VerticalOptions="Start" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button
+                Grid.Row="1"
+                Command="{Binding AddNewItemCommand}"
+                Text="Thêm mục (+)" />
+        </Grid>
+
+        <!--  COLUMN 2: Preview (The Slide)  -->
+        <Grid
+            Grid.Column="1"
+            Padding="20"
+            BackgroundColor="#333">
+            <!--  Giả lập Slide tỷ lệ 4:3 hoặc 16:9  -->
+            <Border
+                BackgroundColor="White"
+                HeightRequest="450"
+                Stroke="Black"
+                StrokeThickness="2"
+                VerticalOptions="Center"
+                WidthRequest="600">
+                <!--  Preview Content  -->
+                <Label
+                    Padding="20"
+                        FontFamily="{Binding SelectedItem.FontFamily}"
+                    FontSize="{Binding SelectedItem.FontSize}"
+                        LineHeight="{Binding SelectedItem.LineSpacing}"
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="{Binding SelectedItem.TextAlignment}"
+                    Text="{Binding SelectedItem.Content}"
+                    TextColor="{Binding SelectedItem.FontColor}"
+                    VerticalOptions="Center" />
+            </Border>
+        </Grid>
+
+        <!--  COLUMN 3: Inspector (Properties)  -->
+        <ScrollView Grid.Column="2" Padding="10">
+            <VerticalStackLayout Spacing="15">
+                <Label FontAttributes="Bold" Text="NỘI DUNG" />
+
+                <Button Command="{Binding PickContentCommand}" Text="Chọn từ Thư viện..." />
+
+                <Label Text="Soạn thảo trực tiếp:" />
+                <Editor
+                    AutoSize="TextChanges"
+                    HeightRequest="150"
+                    Placeholder="Nhập nội dung..."
+                    Text="{Binding SelectedItem.Content}" />
+
+                <BoxView HeightRequest="1" Color="Gray" />
+
+                <Label FontAttributes="Bold" Text="ĐỊNH DẠNG" />
+
+                <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
+                    <Label
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="Cỡ chữ:"
+                        VerticalOptions="Center" />
+                    <Slider
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Maximum="100"
+                        Minimum="10"
+                        Value="{Binding SelectedItem.FontSize}" />
+                    <Label
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        HorizontalOptions="Center"
+                        Text="{Binding SelectedItem.FontSize, StringFormat='{0:F0}'}" />
+
+                    <Label
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Text="Màu:"
+                        VerticalOptions="Center" />
+                    <Entry
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Placeholder="#RRGGBB"
+                        Text="{Binding SelectedItem.FontColor}" />
+
+                    <Label Grid.Row="2" Grid.Column="0" Text="Canh lề:" VerticalOptions="Center"/>
+                    <Picker Grid.Row="2" Grid.Column="1" SelectedItem="{Binding SelectedItem.TextAlignment}">
+                        <Picker.ItemsSource>
+                            <x:Array Type="{x:Type x:String}">
+                                <x:String>Start</x:String>
+                                <x:String>Center</x:String>
+                                <x:String>End</x:String>
+                            </x:Array>
+                        </Picker.ItemsSource>
+                    </Picker>
+
+                    <Label Grid.Row="3" Grid.Column="0" Text="Font:" VerticalOptions="Center"/>
+                    <Entry Grid.Row="3" Grid.Column="1" Text="{Binding SelectedItem.FontFamily}" Placeholder="Arial" />
+
+                    <Label Grid.Row="4" Grid.Column="0" Text="Giãn dòng:" VerticalOptions="Center"/>
+                    <Slider Grid.Row="4" Grid.Column="1" Minimum="0.5" Maximum="3.0" Value="{Binding SelectedItem.LineSpacing}" />
+                </Grid>
+
+                <BoxView HeightRequest="1" Color="Gray" />
+
+                <Button Command="{Binding GeneratePptxCommand}"
+                        Text="XUẤT FILE PPTX"
+                        BackgroundColor="{StaticResource Primary}"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        HeightRequest="60"/>
+
+                <Button Command="{Binding RemoveItemCommand}"
+                        CommandParameter="{Binding SelectedItem}"
+                        Text="Xóa mục này"
+                        BackgroundColor="Red"
+                        TextColor="White"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+</ContentPage>
