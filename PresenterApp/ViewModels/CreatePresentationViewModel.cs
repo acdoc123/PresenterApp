@@ -41,21 +41,17 @@ namespace PresenterApp.ViewModels
             {
                 PresentationThemes.Clear();
                 var themes = await _dataAccess.GetPresentationThemesAsync();
-                var defaultTheme = new PresentationTheme { Id = 0, Name = "Tạo mới..." };
-                PresentationThemes.Add(defaultTheme);
                 foreach (var theme in themes) PresentationThemes.Add(theme);
 
                 var lastThemeId = Preferences.Get("LastThemeId", 0);
-                SelectedTheme = PresentationThemes.FirstOrDefault(t => t.Id == lastThemeId) ?? defaultTheme;
+                SelectedTheme = PresentationThemes.FirstOrDefault(t => t.Id == lastThemeId) ?? PresentationThemes.FirstOrDefault();
 
                 PresentationStructures.Clear();
                 var structures = await _dataAccess.GetPresentationStructuresAsync();
-                var defaultStructure = new PresentationStructure { Id = 0, Name = "Tạo mới..." };
-                PresentationStructures.Add(defaultStructure);
                 foreach (var structure in structures) PresentationStructures.Add(structure);
 
                 var lastStructureId = Preferences.Get("LastStructureId", 0);
-                SelectedStructure = PresentationStructures.FirstOrDefault(s => s.Id == lastStructureId) ?? defaultStructure;
+                SelectedStructure = PresentationStructures.FirstOrDefault(s => s.Id == lastStructureId) ?? PresentationStructures.FirstOrDefault();
             }
             finally
             {
@@ -102,6 +98,24 @@ namespace PresenterApp.ViewModels
             await Shell.Current.GoToAsync(nameof(EditStructurePage), true, new Dictionary<string, object>
             {
                 { "Item", structureToSend }
+            });
+        }
+
+        [RelayCommand]
+        async Task GoToPresentationBuilderAsync()
+        {
+            if (SelectedTheme == null)
+            {
+                await Shell.Current.DisplayAlert("Chưa chọn chủ đề", "Vui lòng chọn giao diện chủ đề trước", "OK");
+                return;
+            }
+
+            var structureToSend = SelectedStructure ?? new PresentationStructure { Id = 0, Name = "" };
+
+            await Shell.Current.GoToAsync(nameof(PresentationBuilderPage), true, new Dictionary<string, object>
+            {
+                { "Structure", structureToSend },
+                { "Theme", SelectedTheme }
             });
         }
     }

@@ -66,6 +66,9 @@ namespace PresenterApp
             builder.Services.AddTransient<EditStructurePage>();
             builder.Services.AddTransient<EditStructureViewModel>();
 
+            builder.Services.AddTransient<PresentationBuilderPage>();
+            builder.Services.AddTransient<PresentationBuilderViewModel>();
+
             builder.Services.AddTransient<Views.Controls.ContentSearchSharedView>();
 
             return builder.Build();

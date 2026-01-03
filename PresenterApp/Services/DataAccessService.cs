@@ -409,18 +409,22 @@ namespace PresenterApp.Services
         public async Task SaveComponentsForStructureAsync(int structureId, List<PresentationComponent> components)
         {
             await Init();
-            // Xóa tất cả component cũ
-            await _database.Table<PresentationComponent>().DeleteAsync(c => c.StructureId == structureId);
 
-            // Thêm lại với thứ tự mới
-            int order = 0;
-            foreach (var comp in components)
+            await _database.RunInTransactionAsync(tran =>
             {
-                comp.Id = 0; // Đảm bảo tạo mới
-                comp.StructureId = structureId;
-                comp.DisplayOrder = order++;
-            }
-            await _database.InsertAllAsync(components);
+                // Xóa tất cả component cũ
+                tran.Execute("DELETE FROM PresentationComponent WHERE StructureId = ?", structureId);
+
+                // Thêm lại với thứ tự mới
+                int order = 0;
+                foreach (var comp in components)
+                {
+                    comp.Id = 0; // Đảm bảo tạo mới
+                    comp.StructureId = structureId;
+                    comp.DisplayOrder = order++;
+                    tran.Insert(comp);
+                }
+            });
         }
     }
 }
